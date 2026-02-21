@@ -1,0 +1,418 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{08E31BA4-B578-4E79-B824-92701EF381D8}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>SistemaBiometricoPolicia</RootNamespace>
+    <AssemblyName>SistemaBiometricoPolicia</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationIcon>2 TRUJO TECHNOLOGIES BLANCO-fotor-2024080714329.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AForge, Version=2.2.5.0, Culture=neutral, PublicKeyToken=c1db6ff4eaa06aeb, processorArchitecture=MSIL">
+      <HintPath>..\packages\AForge.2.2.5\lib\AForge.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Video, Version=2.2.5.0, Culture=neutral, PublicKeyToken=cbfb6e07d173c401, processorArchitecture=MSIL">
+      <HintPath>..\packages\AForge.Video.2.2.5\lib\AForge.Video.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Video.DirectShow, Version=2.2.5.0, Culture=neutral, PublicKeyToken=61ea4348d43881b7, processorArchitecture=MSIL">
+      <HintPath>..\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll</HintPath>
+    </Reference>
+    <Reference Include="DPFPDevNET, Version=1.6.1.0, Culture=neutral, PublicKeyToken=696774c42ee28c57, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\x86\Debug\DPFPDevNET.dll</HintPath>
+    </Reference>
+    <Reference Include="DPFPEngNET, Version=1.6.1.0, Culture=neutral, PublicKeyToken=7fe76e7adf19964b, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\x86\Debug\DPFPEngNET.dll</HintPath>
+    </Reference>
+    <Reference Include="DPFPShrNET, Version=1.6.1.0, Culture=neutral, PublicKeyToken=d902fe275a8d6cf2, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\x86\Debug\DPFPShrNET.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus, Version=5.2.1.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.5.2.1\lib\net45\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus.Interfaces, Version=8.4.0.0, Culture=neutral, PublicKeyToken=a694d7f3b0907a61, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.Interfaces.8.4.0\lib\net462\EPPlus.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.Cryptography, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.Cryptography.10.0.2\lib\net462\Microsoft.Bcl.Cryptography.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.3.0.1\lib\netstandard2.0\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Win32.Registry, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Win32.Registry.5.0.0\lib\net461\Microsoft.Win32.Registry.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.2.2.1\lib\net472\NAudio.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Asio, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.Asio.2.2.1\lib\netstandard2.0\NAudio.Asio.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Core, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.Core.2.2.1\lib\netstandard2.0\NAudio.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Midi, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.Midi.2.2.1\lib\netstandard2.0\NAudio.Midi.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Wasapi, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.Wasapi.2.2.1\lib\netstandard2.0\NAudio.Wasapi.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.WinForms, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.WinForms.2.2.1\lib\net472\NAudio.WinForms.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.WinMM, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.WinMM.2.2.1\lib\netstandard2.0\NAudio.WinMM.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ComponentModel.Annotations.5.0.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Formats.Asn1, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Formats.Asn1.10.0.2\lib\net462\System.Formats.Asn1.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Management" />
+    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security" />
+    <Reference Include="System.Security.AccessControl, Version=6.0.0.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.6.0.1\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Xml, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Xml.10.0.2\lib\net462\System.Security.Cryptography.Xml.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.5.0.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Biometric\BiometricService.cs" />
+    <Compile Include="Data\DatabaseHelper.cs" />
+    <Compile Include="Forms\FormAcercaDe.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormAcercaDe.Designer.cs">
+      <DependentUpon>FormAcercaDe.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormActivacionLicencia.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormActivacionLicencia.Designer.cs">
+      <DependentUpon>FormActivacionLicencia.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormControlComedor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormControlComedor.Designer.cs">
+      <DependentUpon>FormControlComedor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormEnrolamiento.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormEnrolamiento.Designer.cs">
+      <DependentUpon>FormEnrolamiento.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormPrincipal.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormPrincipal.Designer.cs">
+      <DependentUpon>FormPrincipal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormRegistroEstudiantes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormRegistroEstudiantes.Designer.cs">
+      <DependentUpon>FormRegistroEstudiantes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormReportes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormReportes.Designer.cs">
+      <DependentUpon>FormReportes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Estudiante.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reports\ExcelReportGenerator.cs" />
+    <Compile Include="Reports\LogHelper.cs" />
+    <Compile Include="Reports\SyncService.cs" />
+    <Compile Include="Utils\Constantes.cs" />
+    <Compile Include="Utils\LicenciaService.cs" />
+    <Compile Include="Utils\OldVersionsCleaner.cs" />
+    <Compile Include="Utils\SoundHelper.cs" />
+    <Compile Include="Utils\ConfigHelper.cs" />
+    <Compile Include="Utils\StartupValidator.cs" />
+    <Compile Include="Utils\StatusHub.cs" />
+    <Compile Include="Utils\SystemHealthMonitor.cs" />
+    <Compile Include="Utils\UpdateService.cs" />
+    <Compile Include="Utils\WebcamHelper.cs" />
+    <EmbeddedResource Include="Forms\FormEnrolamiento.resx">
+      <DependentUpon>FormEnrolamiento.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FormPrincipal.resx">
+      <DependentUpon>FormPrincipal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="bin\Debug\SistemaBiometricoPolicía.exe.config" />
+    <None Include="bin\x86\Debug\SistemaBiometricoPolicía.exe.config" />
+    <None Include="obj\Debug\build.force" />
+    <None Include="obj\Debug\DesignTimeResolveAssemblyReferences.cache" />
+    <None Include="obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
+    <None Include="obj\Debug\SistemaB.E62C57A2.Up2Date" />
+    <None Include="obj\Debug\SistemaBiometricoPolicía.csproj.AssemblyReference.cache" />
+    <None Include="obj\Debug\SistemaBiometricoPolicía.csproj.CoreCompileInputs.cache" />
+    <None Include="obj\Debug\SistemaBiometricoPolicía.csproj.GenerateResource.cache" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="2 TRUJO TECHNOLOGIES BLANCO-fotor-2024080714329.ico" />
+    <Content Include="bin\Debug\AForge.dll" />
+    <Content Include="bin\Debug\AForge.Video.DirectShow.dll" />
+    <Content Include="bin\Debug\AForge.Video.DirectShow.xml" />
+    <Content Include="bin\Debug\AForge.Video.dll" />
+    <Content Include="bin\Debug\AForge.Video.xml" />
+    <Content Include="bin\Debug\AForge.xml" />
+    <Content Include="bin\Debug\EPPlus.dll" />
+    <Content Include="bin\Debug\EPPlus.xml" />
+    <Content Include="bin\Debug\Microsoft.Win32.Registry.dll" />
+    <Content Include="bin\Debug\Microsoft.Win32.Registry.xml" />
+    <Content Include="bin\Debug\NAudio.Asio.dll" />
+    <Content Include="bin\Debug\NAudio.Asio.xml" />
+    <Content Include="bin\Debug\NAudio.Core.dll" />
+    <Content Include="bin\Debug\NAudio.Core.xml" />
+    <Content Include="bin\Debug\NAudio.dll" />
+    <Content Include="bin\Debug\NAudio.Midi.dll" />
+    <Content Include="bin\Debug\NAudio.Midi.xml" />
+    <Content Include="bin\Debug\NAudio.Wasapi.dll" />
+    <Content Include="bin\Debug\NAudio.Wasapi.xml" />
+    <Content Include="bin\Debug\NAudio.WinForms.dll" />
+    <Content Include="bin\Debug\NAudio.WinForms.xml" />
+    <Content Include="bin\Debug\NAudio.WinMM.dll" />
+    <Content Include="bin\Debug\NAudio.WinMM.xml" />
+    <Content Include="bin\Debug\NAudio.xml" />
+    <Content Include="bin\Debug\SistemaBiometricoPolicía.exe" />
+    <Content Include="bin\Debug\SistemaBiometricoPolicía.pdb" />
+    <Content Include="bin\Debug\Sonidos\alert.wav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="bin\Debug\Sonidos\error.wav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="bin\Debug\Sonidos\success.wav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="bin\Debug\System.Data.SQLite.dll" />
+    <Content Include="bin\Debug\System.Security.AccessControl.dll" />
+    <Content Include="bin\Debug\System.Security.AccessControl.xml" />
+    <Content Include="bin\Debug\System.Security.Principal.Windows.dll" />
+    <Content Include="bin\Debug\System.Security.Principal.Windows.xml" />
+    <Content Include="bin\Debug\x64\SQLite.Interop.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="bin\Debug\x86\SQLite.Interop.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="bin\x86\Debug\AForge.dll" />
+    <Content Include="bin\x86\Debug\AForge.Video.DirectShow.dll" />
+    <Content Include="bin\x86\Debug\AForge.Video.DirectShow.xml" />
+    <Content Include="bin\x86\Debug\AForge.Video.dll" />
+    <Content Include="bin\x86\Debug\AForge.Video.xml" />
+    <Content Include="bin\x86\Debug\AForge.xml" />
+    <Content Include="bin\x86\Debug\DPFPDevNET.dll" />
+    <Content Include="bin\x86\Debug\DPFPEngNET.dll" />
+    <Content Include="bin\x86\Debug\DPFPShrNET.dll" />
+    <Content Include="bin\x86\Debug\EPPlus.dll" />
+    <Content Include="bin\x86\Debug\EPPlus.Interfaces.dll" />
+    <Content Include="bin\x86\Debug\EPPlus.xml" />
+    <Content Include="bin\x86\Debug\Microsoft.Bcl.Cryptography.dll" />
+    <Content Include="bin\x86\Debug\Microsoft.Bcl.Cryptography.xml" />
+    <Content Include="bin\x86\Debug\Microsoft.IO.RecyclableMemoryStream.dll" />
+    <Content Include="bin\x86\Debug\Microsoft.IO.RecyclableMemoryStream.xml" />
+    <Content Include="bin\x86\Debug\Microsoft.Win32.Registry.dll" />
+    <Content Include="bin\x86\Debug\Microsoft.Win32.Registry.xml" />
+    <Content Include="bin\x86\Debug\NAudio.Asio.dll" />
+    <Content Include="bin\x86\Debug\NAudio.Asio.xml" />
+    <Content Include="bin\x86\Debug\NAudio.Core.dll" />
+    <Content Include="bin\x86\Debug\NAudio.Core.xml" />
+    <Content Include="bin\x86\Debug\NAudio.dll" />
+    <Content Include="bin\x86\Debug\NAudio.Midi.dll" />
+    <Content Include="bin\x86\Debug\NAudio.Midi.xml" />
+    <Content Include="bin\x86\Debug\NAudio.Wasapi.dll" />
+    <Content Include="bin\x86\Debug\NAudio.Wasapi.xml" />
+    <Content Include="bin\x86\Debug\NAudio.WinForms.dll" />
+    <Content Include="bin\x86\Debug\NAudio.WinForms.xml" />
+    <Content Include="bin\x86\Debug\NAudio.WinMM.dll" />
+    <Content Include="bin\x86\Debug\NAudio.WinMM.xml" />
+    <Content Include="bin\x86\Debug\NAudio.xml" />
+    <Content Include="bin\x86\Debug\SistemaBiometricoPolicía.exe" />
+    <Content Include="bin\x86\Debug\SistemaBiometricoPolicía.pdb" />
+    <Content Include="bin\x86\Debug\System.Buffers.dll" />
+    <Content Include="bin\x86\Debug\System.Buffers.xml" />
+    <Content Include="bin\x86\Debug\System.ComponentModel.Annotations.dll" />
+    <Content Include="bin\x86\Debug\System.Data.SQLite.dll" />
+    <Content Include="bin\x86\Debug\System.Data.SQLite.xml" />
+    <Content Include="bin\x86\Debug\System.Formats.Asn1.dll" />
+    <Content Include="bin\x86\Debug\System.Formats.Asn1.xml" />
+    <Content Include="bin\x86\Debug\System.Memory.dll" />
+    <Content Include="bin\x86\Debug\System.Memory.xml" />
+    <Content Include="bin\x86\Debug\System.Numerics.Vectors.dll" />
+    <Content Include="bin\x86\Debug\System.Numerics.Vectors.xml" />
+    <Content Include="bin\x86\Debug\System.Runtime.CompilerServices.Unsafe.dll" />
+    <Content Include="bin\x86\Debug\System.Runtime.CompilerServices.Unsafe.xml" />
+    <Content Include="bin\x86\Debug\System.Security.AccessControl.dll" />
+    <Content Include="bin\x86\Debug\System.Security.AccessControl.xml" />
+    <Content Include="bin\x86\Debug\System.Security.Cryptography.Xml.dll" />
+    <Content Include="bin\x86\Debug\System.Security.Cryptography.Xml.xml" />
+    <Content Include="bin\x86\Debug\System.Security.Principal.Windows.dll" />
+    <Content Include="bin\x86\Debug\System.Security.Principal.Windows.xml" />
+    <Content Include="bin\x86\Debug\x64\SQLite.Interop.dll" />
+    <Content Include="bin\x86\Debug\x86\SQLite.Interop.dll" />
+    <Content Include="obj\Debug\SistemaBiometricoPolicía.csproj.FileListAbsolute.txt" />
+    <Content Include="obj\Debug\SistemaBiometricoPolicía.exe" />
+    <Content Include="obj\Debug\SistemaBiometricoPolicía.pdb" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="bin\Release\" />
+    <Folder Include="obj\Debug\TempPE\" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.8">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.8 %28x86 y x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Este proyecto hace referencia a los paquetes NuGet que faltan en este equipo. Use la restauración de paquetes NuGet para descargarlos. Para obtener más información, consulte http://go.microsoft.com/fwlink/?LinkID=322105. El archivo que falta es {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
+    <Error Condition="!Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
+  </Target>
+  <Import Project="..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
+</Project>

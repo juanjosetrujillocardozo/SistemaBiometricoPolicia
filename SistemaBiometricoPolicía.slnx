@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="SistemaBiometricoPolicía/SistemaBiometricoPolicía.csproj" Id="08e31ba4-b578-4e79-b824-92701ef381d8">
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+</Solution>

@@ -1,0 +1,61 @@
+## ============================================================
+## REGLAS ESTÁNDAR DE VISUAL STUDIO
+## ============================================================
+
+# Usuario y Temporales
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Resultados de Compilación
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+# Archivos de base de datos temporales de VS
+*.VC.db
+*.VC.VC.opendb
+
+# NuGet
+packages/
+*.nupkg
+*.nuget.props
+*.nuget.targets
+
+# Archivos de sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## ============================================================
+## ESPECÍFICO PARA TRUJO TECHNOLOGIES (SEGURIDAD Y PRIVACIDAD)
+## ============================================================
+
+# NO SUBIR BASES DE DATOS (Contienen huellas y datos sensibles)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# NO SUBIR ARCHIVOS GENERADOS POR EL SISTEMA
+[Ll]ogs/
+[Ff]otosEstudiantes/
+[Ff]otosConsumo/
+[Rr]eportes/
+
+# NO SUBIR INSTALADORES O SALIDAS DE INNO SETUP
+[Oo]utput/
+[Ee]xpress/
+
+# EXCEPCIONES (Archivos que SÍ queremos en GitHub aunque parezcan temporales)
+!**/[Pp]ackages/build/
