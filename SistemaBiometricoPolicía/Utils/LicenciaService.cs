@@ -8,7 +8,7 @@ namespace SistemaBiometricoPolicia.Utils
 {
     public static class LicenciaService
     {
-        private const string URL_VALIDACION = "http://licencias.trujotechnologies.com/check-license.php";
+        private const string URL_VALIDACION = "https://licencias.trujotechnologies.com/check-license.php";
 
         public static bool LicenciaValida { get; private set; } = false;
         public static string MensajeEstado { get; private set; } = "Verificando...";

@@ -9,35 +9,39 @@ namespace SistemaBiometricoPolicia.Data
 {
     public static class DatabaseHelper
     {
+        // ── Fase 0: Clave temporal de cifrado ─────────────────────────────────
+        // TODO Fase 1: mover a DPAPI / MachineKeyProvider para derivación por hardware.
+        // El valor aquí es un placeholder; la BD real se cifrará con ChangePassword()
+        // en MigrarACifrado() la primera vez que se ejecute esta versión.
+        private const string DB_KEY = "TRUJO_DB_2026_TEMP";
+
         private static string dbPath;
         private static string ConnectionString;
 
         static DatabaseHelper()
         {
-            // CAMBIO: Ahora usa el mismo nombre que busca SyncService
-            dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "biometrico.db");
-            ConnectionString = $"Data Source={dbPath};Version=3;";
+            dbPath           = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "biometrico.db");
+            // Password= activa el cifrado de System.Data.SQLite (SEE/SQLCipher según la
+            // native DLL disponible). Se migra la BD existente sin contraseña en MigrarACifrado().
+            ConnectionString = $"Data Source={dbPath};Version=3;Password={DB_KEY};";
+
+            MigrarACifrado();
             InicializarBaseDeDatos();
         }
+
+        // ── Conexión ───────────────────────────────────────────────────────────
 
         public static SQLiteConnection ObtenerConexion()
-        {
-            return new SQLiteConnection(ConnectionString);
-        }
+            => new SQLiteConnection(ConnectionString);
 
-        public static void InicializarBaseDatos()
-        {
-            InicializarBaseDeDatos();
-        }
+        // ── Inicialización ─────────────────────────────────────────────────────
+
+        public static void InicializarBaseDatos() => InicializarBaseDeDatos();
 
         private static void InicializarBaseDeDatos()
         {
-            bool crearArchivo = !File.Exists(dbPath);
-
-            if (crearArchivo)
-            {
+            if (!File.Exists(dbPath))
                 SQLiteConnection.CreateFile(dbPath);
-            }
 
             using (var conn = ObtenerConexion())
             {
@@ -46,72 +50,98 @@ namespace SistemaBiometricoPolicia.Data
             }
         }
 
+        /// <summary>
+        /// Si la BD existe y está sin contraseña (instalaciones previas a Fase 0),
+        /// la cifra con DB_KEY usando ChangePassword().
+        /// Si ya está cifrada, la apertura sin contraseña fallará y el bloque catch
+        /// la deja intacta para que ConnectionString la abra con la clave correcta.
+        /// </summary>
+        private static void MigrarACifrado()
+        {
+            if (!File.Exists(dbPath)) return;
+
+            try
+            {
+                // Intentar abrir SIN contraseña (BD no cifrada — escenario de migración)
+                using (var conn = new SQLiteConnection($"Data Source={dbPath};Version=3;"))
+                {
+                    conn.Open();
+                    // Éxito → la BD no estaba cifrada; la ciframos ahora
+                    conn.ChangePassword(DB_KEY);
+                    LogHelper.RegistrarEvento(
+                        "BD migrada a almacenamiento cifrado (Fase 0).", "SEGURIDAD");
+                }
+            }
+            catch (SQLiteException)
+            {
+                // Ya está cifrada o requiere contraseña → no hacer nada
+            }
+            catch (Exception ex)
+            {
+                LogHelper.RegistrarError("MigrarACifrado", ex);
+            }
+        }
+
         private static void CrearTablas(SQLiteConnection conn)
         {
-            string sqlLicencia = @"
+            const string sqlLicencia = @"
                 CREATE TABLE IF NOT EXISTS Licencia (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    TokenActivacion TEXT,
-                    FechaExpiracion DATETIME,
+                    Id                       INTEGER PRIMARY KEY AUTOINCREMENT,
+                    TokenActivacion          TEXT,
+                    FechaExpiracion          DATETIME,
                     UltimaVerificacionRemota DATETIME,
-                    Estado TEXT DEFAULT 'ACTIVO'
+                    Estado                   TEXT DEFAULT 'ACTIVO'
                 );";
 
             using (var cmd = new SQLiteCommand(sqlLicencia, conn))
-            {
                 cmd.ExecuteNonQuery();
-            }
 
-            string sql = @"
+            const string sql = @"
                 CREATE TABLE IF NOT EXISTS Estudiantes (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Id              INTEGER PRIMARY KEY AUTOINCREMENT,
                     NumeroDocumento TEXT UNIQUE NOT NULL,
-                    Nombres TEXT NOT NULL,
-                    Apellidos TEXT NOT NULL,
-                    Seccion TEXT NOT NULL,
-                    RutaFoto TEXT,
-                    FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP
+                    Nombres         TEXT NOT NULL,
+                    Apellidos       TEXT NOT NULL,
+                    Seccion         TEXT NOT NULL,
+                    RutaFoto        TEXT,
+                    FechaRegistro   DATETIME DEFAULT CURRENT_TIMESTAMP
                 );
 
                 CREATE TABLE IF NOT EXISTS Huellas (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    EstudianteId INTEGER NOT NULL,
+                    Id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                    EstudianteId   INTEGER NOT NULL,
                     TemplateHuella BLOB NOT NULL,
-                    Dedo TEXT,
-                    FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    Dedo           TEXT,
+                    FechaRegistro  DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (EstudianteId) REFERENCES Estudiantes(Id)
                 );
 
                 CREATE TABLE IF NOT EXISTS RegistrosAlimentacion (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Id           INTEGER PRIMARY KEY AUTOINCREMENT,
                     EstudianteId INTEGER NOT NULL,
                     TipoServicio TEXT NOT NULL,
-                    FechaHora DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FotoPath TEXT,
+                    FechaHora    DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FotoPath     TEXT,
                     Sincronizado INTEGER DEFAULT 0,
                     FOREIGN KEY (EstudianteId) REFERENCES Estudiantes(Id)
                 );
 
-                CREATE INDEX IF NOT EXISTS idx_estudiante_documento 
+                CREATE INDEX IF NOT EXISTS idx_estudiante_documento
                     ON Estudiantes(NumeroDocumento);
 
-                CREATE INDEX IF NOT EXISTS idx_registro_fecha 
+                CREATE INDEX IF NOT EXISTS idx_registro_fecha
                     ON RegistrosAlimentacion(FechaHora);
 
-                CREATE INDEX IF NOT EXISTS idx_registro_estudiante 
-                    ON RegistrosAlimentacion(EstudianteId);
-            ";
+                CREATE INDEX IF NOT EXISTS idx_registro_estudiante
+                    ON RegistrosAlimentacion(EstudianteId);";
 
             using (var cmd = new SQLiteCommand(sql, conn))
-            {
                 cmd.ExecuteNonQuery();
-            }
         }
 
-        public static string ObtenerRutaBaseDeDatos()
-        {
-            return dbPath;
-        }
+        // ── Métodos de acceso ──────────────────────────────────────────────────
+
+        public static string ObtenerRutaBaseDeDatos() => dbPath;
 
         public static List<Estudiante> ObtenerEstudiantesSinHuellas()
         {
@@ -119,23 +149,26 @@ namespace SistemaBiometricoPolicia.Data
             using (var conn = ObtenerConexion())
             {
                 conn.Open();
-                string sql = @"SELECT * FROM Estudiantes 
-                             WHERE Id NOT IN (SELECT EstudianteId FROM Huellas)
-                             ORDER BY Apellidos ASC";
+                const string sql = @"
+                    SELECT * FROM Estudiantes
+                    WHERE Id NOT IN (SELECT EstudianteId FROM Huellas)
+                    ORDER BY Apellidos ASC";
 
-                using (var cmd = new SQLiteCommand(sql, conn))
+                using (var cmd    = new SQLiteCommand(sql, conn))
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
                         lista.Add(new Estudiante
                         {
-                            Id = Convert.ToInt32(reader["Id"]),
+                            Id              = Convert.ToInt32(reader["Id"]),
                             NumeroDocumento = reader["NumeroDocumento"].ToString(),
-                            Apellidos = reader["Apellidos"].ToString(),
-                            Nombres = reader["Nombres"].ToString(),
-                            Seccion = reader["Seccion"].ToString(),
-                            RutaFoto = reader["RutaFoto"] != DBNull.Value ? reader["RutaFoto"].ToString() : null
+                            Apellidos       = reader["Apellidos"].ToString(),
+                            Nombres         = reader["Nombres"].ToString(),
+                            Seccion         = reader["Seccion"].ToString(),
+                            RutaFoto        = reader["RutaFoto"] != DBNull.Value
+                                                  ? reader["RutaFoto"].ToString()
+                                                  : null
                         });
                     }
                 }
@@ -150,13 +183,14 @@ namespace SistemaBiometricoPolicia.Data
                 using (var conn = ObtenerConexion())
                 {
                     conn.Open();
-                    string sql = "INSERT INTO Huellas (EstudianteId, Dedo, TemplateHuella) " +
-                                 "VALUES (@estudianteId, @dedo, @template)";
+                    const string sql =
+                        "INSERT INTO Huellas (EstudianteId, Dedo, TemplateHuella) " +
+                        "VALUES (@estudianteId, @dedo, @template)";
                     using (var cmd = new SQLiteCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@estudianteId", estudianteId);
-                        cmd.Parameters.AddWithValue("@dedo", dedo);
-                        cmd.Parameters.AddWithValue("@template", template);
+                        cmd.Parameters.AddWithValue("@dedo",         dedo);
+                        cmd.Parameters.AddWithValue("@template",     template);
                         return cmd.ExecuteNonQuery() > 0;
                     }
                 }
@@ -173,11 +207,11 @@ namespace SistemaBiometricoPolicia.Data
             using (var conn = ObtenerConexion())
             {
                 conn.Open();
-                string sql = "UPDATE Estudiantes SET RutaFoto = @ruta WHERE Id = @id";
+                const string sql = "UPDATE Estudiantes SET RutaFoto = @ruta WHERE Id = @id";
                 using (var cmd = new SQLiteCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@ruta", rutaFoto);
-                    cmd.Parameters.AddWithValue("@id", estudianteId);
+                    cmd.Parameters.AddWithValue("@id",   estudianteId);
                     cmd.ExecuteNonQuery();
                 }
             }
