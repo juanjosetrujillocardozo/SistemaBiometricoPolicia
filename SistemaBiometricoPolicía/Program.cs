@@ -10,6 +10,7 @@ namespace SistemaBiometricoPolicia
         [STAThread]
         static void Main()
         {
+
             // ✅ CRÍTICO: Forzar TLS 1.2 para que funcione en Windows 7 con servidores HTTPS modernos
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
