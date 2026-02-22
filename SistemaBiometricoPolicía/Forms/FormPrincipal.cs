@@ -84,7 +84,7 @@ namespace SistemaBiometricoPolicia.Forms
             try
             {
                 StatusHub.PushEvento("Verificando base de datos...");
-                DatabaseHelper.InicializarBaseDatos();
+                DatabaseHelper.InicializarBaseDeDatos();
                 StatusHub.Set("BD", EstadoComponente.Ok, "Base de datos inicializada.");
                 StatusHub.PushEvento("✓ Base de datos lista.");
                 LogHelper.RegistrarEvento("Sistema iniciado correctamente", "INFO");

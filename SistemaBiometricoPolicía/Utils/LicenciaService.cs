@@ -24,7 +24,7 @@ namespace SistemaBiometricoPolicia.Utils
                 using (var conn = DatabaseHelper.ObtenerConexion())
                 {
                     conn.Open();
-                    var cmd = new SQLiteCommand("SELECT * FROM Licencia LIMIT 1", conn);
+                    using (var cmd = new SQLiteCommand("SELECT * FROM Licencia LIMIT 1", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (!reader.Read())
@@ -50,8 +50,9 @@ namespace SistemaBiometricoPolicia.Utils
                         await VerificarRemotamente(token);
 
                         // 3. Volver a leer estado local (por si se actualizó remotamente)
-                        var cmdEstado = new SQLiteCommand("SELECT Estado FROM Licencia LIMIT 1", conn);
-                        string estadoActualizado = cmdEstado.ExecuteScalar()?.ToString() ?? "OK";
+                        string estadoActualizado;
+                        using (var cmdEstado = new SQLiteCommand("SELECT Estado FROM Licencia LIMIT 1", conn))
+                            estadoActualizado = cmdEstado.ExecuteScalar()?.ToString() ?? "OK";
 
                         if (estadoActualizado == "BLOQUEADO")
                         {
@@ -85,9 +86,8 @@ namespace SistemaBiometricoPolicia.Utils
                 using (var conn = DatabaseHelper.ObtenerConexion())
                 {
                     conn.Open();
-                    var cmd = new SQLiteCommand("SELECT Estado FROM Licencia LIMIT 1", conn);
-                    var estado = cmd.ExecuteScalar()?.ToString() ?? "OK";
-                    return estado;
+                    using (var cmd = new SQLiteCommand("SELECT Estado FROM Licencia LIMIT 1", conn))
+                        return cmd.ExecuteScalar()?.ToString() ?? "OK";
                 }
             }
             catch
@@ -137,9 +137,11 @@ namespace SistemaBiometricoPolicia.Utils
                 using (var conn = DatabaseHelper.ObtenerConexion())
                 {
                     conn.Open();
-                    var cmd = new SQLiteCommand("UPDATE Licencia SET Estado = @estado", conn);
-                    cmd.Parameters.AddWithValue("@estado", nuevoEstado);
-                    cmd.ExecuteNonQuery();
+                    using (var cmd = new SQLiteCommand("UPDATE Licencia SET Estado = @estado", conn))
+                    {
+                        cmd.Parameters.AddWithValue("@estado", nuevoEstado);
+                        cmd.ExecuteNonQuery();
+                    }
                 }
             }
             catch (Exception ex)

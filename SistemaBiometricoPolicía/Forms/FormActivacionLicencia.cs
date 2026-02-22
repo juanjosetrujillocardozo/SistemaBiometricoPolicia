@@ -48,32 +48,37 @@ namespace SistemaBiometricoPolicia.Forms
                 using (var conn = DatabaseHelper.ObtenerConexion())
                 {
                     conn.Open();
-                    int count = Convert.ToInt32(
-                        new SQLiteCommand("SELECT COUNT(*) FROM Licencia", conn).ExecuteScalar());
+                    int count;
+                    using (var cmdCount = new SQLiteCommand("SELECT COUNT(*) FROM Licencia", conn))
+                        count = Convert.ToInt32(cmdCount.ExecuteScalar());
 
                     if (count > 0)
                     {
-                        var cmd = new SQLiteCommand(@"
+                        using (var cmd = new SQLiteCommand(@"
                             UPDATE Licencia
                             SET TokenActivacion          = @token,
                                 FechaExpiracion          = @fecha,
                                 Estado                   = 'ACTIVO',
-                                UltimaVerificacionRemota = @ahora", conn);
-                        cmd.Parameters.AddWithValue("@token", token);
-                        cmd.Parameters.AddWithValue("@fecha", fechaExpiracion);
-                        cmd.Parameters.AddWithValue("@ahora", DateTime.Now);
-                        cmd.ExecuteNonQuery();
+                                UltimaVerificacionRemota = @ahora", conn))
+                        {
+                            cmd.Parameters.AddWithValue("@token", token);
+                            cmd.Parameters.AddWithValue("@fecha", fechaExpiracion);
+                            cmd.Parameters.AddWithValue("@ahora", DateTime.Now);
+                            cmd.ExecuteNonQuery();
+                        }
                     }
                     else
                     {
-                        var cmd = new SQLiteCommand(@"
+                        using (var cmd = new SQLiteCommand(@"
                             INSERT INTO Licencia
                                 (TokenActivacion, FechaExpiracion, Estado, UltimaVerificacionRemota)
-                            VALUES (@token, @fecha, 'ACTIVO', @ahora)", conn);
-                        cmd.Parameters.AddWithValue("@token", token);
-                        cmd.Parameters.AddWithValue("@fecha", fechaExpiracion);
-                        cmd.Parameters.AddWithValue("@ahora", DateTime.Now);
-                        cmd.ExecuteNonQuery();
+                            VALUES (@token, @fecha, 'ACTIVO', @ahora)", conn))
+                        {
+                            cmd.Parameters.AddWithValue("@token", token);
+                            cmd.Parameters.AddWithValue("@fecha", fechaExpiracion);
+                            cmd.Parameters.AddWithValue("@ahora", DateTime.Now);
+                            cmd.ExecuteNonQuery();
+                        }
                     }
                 }
 
@@ -133,8 +138,8 @@ namespace SistemaBiometricoPolicia.Forms
                 using (var conn = DatabaseHelper.ObtenerConexion())
                 {
                     conn.Open();
-                    new SQLiteCommand("UPDATE Licencia SET Estado = 'BLOQUEADO'", conn)
-                        .ExecuteNonQuery();
+                    using (var cmd = new SQLiteCommand("UPDATE Licencia SET Estado = 'BLOQUEADO'", conn))
+                        cmd.ExecuteNonQuery();
                 }
                 LogHelper.RegistrarEvento("Sistema bloqueado manualmente", "ADMIN");
                 MessageBox.Show("🔒 Sistema bloqueado exitosamente", "TRUJO TECHNOLOGIES",

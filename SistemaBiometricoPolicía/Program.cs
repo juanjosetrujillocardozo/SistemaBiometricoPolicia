@@ -11,8 +11,12 @@ namespace SistemaBiometricoPolicia
         static void Main()
         {
 
-            // ✅ CRÍTICO: Forzar TLS 1.2 para que funcione en Windows 7 con servidores HTTPS modernos
-            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+            // ✅ CRÍTICO: Habilitar TLS 1.2, 1.1 y 1.0 para compatibilidad con Windows 7
+            // Windows 7 no habilita TLS 1.2 por defecto; sin esto, las llamadas HTTPS fallan.
+            System.Net.ServicePointManager.SecurityProtocol =
+                System.Net.SecurityProtocolType.Tls12 |
+                System.Net.SecurityProtocolType.Tls11 |
+                System.Net.SecurityProtocolType.Tls;
 
 #pragma warning disable CS0618
             OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;

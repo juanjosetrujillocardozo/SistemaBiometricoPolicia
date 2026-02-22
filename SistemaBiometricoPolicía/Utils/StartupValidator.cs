@@ -38,7 +38,7 @@ namespace SistemaBiometricoPolicia.Utils
             // 3. Verificar Base de Datos
             try
             {
-                DatabaseHelper.InicializarBaseDatos();
+                DatabaseHelper.InicializarBaseDeDatos();
             }
             catch (Exception ex)
             {

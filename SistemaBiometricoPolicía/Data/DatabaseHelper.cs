@@ -23,9 +23,7 @@ namespace SistemaBiometricoPolicia.Data
         public static SQLiteConnection ObtenerConexion()
             => new SQLiteConnection(ConnectionString);
 
-        public static void InicializarBaseDatos() => InicializarBaseDeDatos();
-
-        private static void InicializarBaseDeDatos()
+        public static void InicializarBaseDeDatos()
         {
             if (!File.Exists(dbPath))
                 SQLiteConnection.CreateFile(dbPath);
