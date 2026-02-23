@@ -14,10 +14,23 @@ namespace SistemaBiometricoPolicia.Data
 
         static DatabaseHelper()
         {
-            dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "biometrico.db");
-            // Fase 0: Sin contraseña para asegurar estabilidad con System.Data.SQLite estándar
-            ConnectionString = $"Data Source={dbPath};Version=3;Default Timeout=5;";
-            InicializarBaseDeDatos();
+            // SOLUCIÓN PROFESIONAL: Mover la BD a ProgramData para evitar errores de permisos en Program Files
+            string folderPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "TRUJO",
+                "SistemaBiometricoPolicia"
+            );
+
+            // Crear la carpeta si no existe (C:\ProgramData\TRUJO\SistemaBiometricoPolicia)
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            dbPath = Path.Combine(folderPath, "biometrico.db");
+
+            // ConnectionString con la nueva ruta absoluta
+            ConnectionString = $"Data Source={dbPath};Version=3;BusyTimeout=5000;";
         }
 
         public static SQLiteConnection ObtenerConexion()
@@ -25,22 +38,30 @@ namespace SistemaBiometricoPolicia.Data
 
         public static void InicializarBaseDeDatos()
         {
-            if (!File.Exists(dbPath))
-                SQLiteConnection.CreateFile(dbPath);
-
-            using (var conn = ObtenerConexion())
+            try
             {
-                conn.Open();
+                if (!File.Exists(dbPath))
+                {
+                    SQLiteConnection.CreateFile(dbPath);
+                }
 
-                // WAL para lecturas/escrituras concurrentes
-                using (var cmd = new SQLiteCommand("PRAGMA journal_mode=WAL;", conn))
-                    cmd.ExecuteNonQuery();
+                using (var conn = ObtenerConexion())
+                {
+                    conn.Open();
 
-                // Timeout de bloqueo (5s) para evitar SQLITE_BUSY inmediato
-                using (var cmd = new SQLiteCommand("PRAGMA busy_timeout=5000;", conn))
-                    cmd.ExecuteNonQuery();
+                    // Optimizaciones de rendimiento
+                    using (var cmd = new SQLiteCommand("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;", conn))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
 
-                CrearTablas(conn);
+                    CrearTablas(conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.RegistrarError("Error crítico al inicializar base de datos en: " + dbPath, ex);
+                throw; // Re-lanzar para que el StartupValidator lo capture
             }
         }
 
@@ -55,10 +76,7 @@ namespace SistemaBiometricoPolicia.Data
                     Estado                   TEXT DEFAULT 'ACTIVO'
                 );";
 
-            using (var cmd = new SQLiteCommand(sqlLicencia, conn))
-                cmd.ExecuteNonQuery();
-
-            const string sql = @"
+            const string sqlTablas = @"
                 CREATE TABLE IF NOT EXISTS Estudiantes (
                     Id              INTEGER PRIMARY KEY AUTOINCREMENT,
                     NumeroDocumento TEXT UNIQUE NOT NULL,
@@ -89,14 +107,16 @@ namespace SistemaBiometricoPolicia.Data
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_estudiante_documento ON Estudiantes(NumeroDocumento);
-                CREATE INDEX IF NOT EXISTS idx_registro_fecha ON RegistrosAlimentacion(FechaHora);
-                CREATE INDEX IF NOT EXISTS idx_registro_estudiante ON RegistrosAlimentacion(EstudianteId);";
+                CREATE INDEX IF NOT EXISTS idx_registro_fecha ON RegistrosAlimentacion(FechaHora);";
 
-            using (var cmd = new SQLiteCommand(sql, conn))
-                cmd.ExecuteNonQuery();
+            using (var cmd = new SQLiteCommand(sqlLicencia, conn)) cmd.ExecuteNonQuery();
+            using (var cmd = new SQLiteCommand(sqlTablas, conn)) cmd.ExecuteNonQuery();
         }
 
         public static string ObtenerRutaBaseDeDatos() => dbPath;
+
+        // ... (El resto de tus métodos ObtenerEstudiantesSinHuellas, GuardarHuella, etc. se mantienen igual)
+        // Solo asegúrate de que sigan usando ObtenerConexion() que ya tiene la nueva ruta.
 
         public static List<Estudiante> ObtenerEstudiantesSinHuellas()
         {
@@ -168,9 +188,6 @@ namespace SistemaBiometricoPolicia.Data
             }
         }
 
-        /// <summary>
-        /// Retorna conteo de registros de hoy desglosado por tipo de servicio.
-        /// </summary>
         public static (int total, int desayunos, int almuerzos, int cenas) ObtenerEstadisticasHoy()
         {
             try

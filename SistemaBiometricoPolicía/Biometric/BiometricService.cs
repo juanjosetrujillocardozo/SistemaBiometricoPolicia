@@ -1,13 +1,14 @@
-using System;
-using System.Data.SQLite;
-using System.Drawing;
-using System.IO;
 using DPFP;
 using DPFP.Capture;
 using DPFP.Processing;
 using DPFP.Verification;
 using SistemaBiometricoPolicia.Data;
 using SistemaBiometricoPolicia.Utils;
+using System;
+using System.Data.SQLite;
+using System.Drawing;
+using System.IO;
+using System.Management.Instrumentation;
 
 namespace SistemaBiometricoPolicia.Biometric
 {
@@ -28,9 +29,12 @@ namespace SistemaBiometricoPolicia.Biometric
 
         public event EventHandler<EstudianteIdentificadoEventArgs> EstudianteIdentificado;
         public event EventHandler<string> MensajeEstado;
+        public static BiometricService Instancia { get; private set; }
 
         public BiometricService()
         {
+            Instancia = this; // Registrar instancia activa
+
             try
             {
                 StatusHub.PushEvento("🔄 Inicializando SDK de DigitalPersona...");
@@ -108,6 +112,9 @@ namespace SistemaBiometricoPolicia.Biometric
         // 👇 Implementación formal de IDisposable
         public void Dispose()
         {
+
+            if (this == Instancia) Instancia = null; // Limpiar referencia global
+
             if (Capturer != null)
             {
                 try { Capturer.StopCapture(); } catch { }

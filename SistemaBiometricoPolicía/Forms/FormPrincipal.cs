@@ -95,19 +95,20 @@ namespace SistemaBiometricoPolicia.Forms
                 if (!licenciaValida)
                 {
                     BloquearSistema();
+                    return; // ← Salimos aquí, no hay nada más que hacer
                 }
-                else
-                {
-                    StatusHub.PushEvento("✓ Licencia válida.");
-                    DesbloquearSistema();
-                    ActualizarEstadisticas();
 
-                    // 🔹 NUEVO: limpiar versiones antiguas
-                    OldVersionsCleaner.DesinstalarVersionesAntiguas(this);
+                StatusHub.PushEvento("✓ Licencia válida.");
+                DesbloquearSistema();
+                ActualizarEstadisticas();
+                OldVersionsCleaner.DesinstalarVersionesAntiguas(this);
+                LogHelper.RegistrarEvento("Licencia validada correctamente", "INFO");
 
-                    LogHelper.RegistrarEvento("Licencia validada correctamente", "INFO");
-                    await UpdateService.CheckForUpdatesAsync(this);
-                }
+                // ✅ Esperamos 500ms para que SQLite libere todas las conexiones
+                // antes de que UpdateService intente leer TokenActual
+                await Task.Delay(500);
+
+                await UpdateService.CheckForUpdatesAsync(this);
             }
             catch (Exception ex)
             {

@@ -85,6 +85,31 @@ namespace SistemaBiometricoPolicia.Utils
 #endif
         }
 
+        // Añade esto dentro de la clase LicenciaService
+        public static string TokenActual
+        {
+            get
+            {
+                try
+                {
+                    // Usamos una conexión nueva y la cerramos rápido
+                    using (var conn = DatabaseHelper.ObtenerConexion())
+                    {
+                        conn.Open();
+                        using (var cmd = new SQLiteCommand("SELECT TokenActivacion FROM Licencia LIMIT 1", conn))
+                        {
+                            var result = cmd.ExecuteScalar();
+                            return result != null ? result.ToString() : "";
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.RegistrarError("Error leyendo TokenActual", ex);
+                    return "";
+                }
+            }
+        }
         public static string ObtenerEstadoLocal()
         {
             try

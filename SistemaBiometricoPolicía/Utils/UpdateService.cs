@@ -1,11 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using SistemaBiometricoPolicia.Biometric;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -13,220 +11,167 @@ namespace SistemaBiometricoPolicia.Utils
 {
     public static class UpdateService
     {
-        private const string URL_UPDATE =
-            "https://licencias.trujotechnologies.com/update-check.php";
+        private static readonly HttpClient http = new HttpClient();
+        private const string URL_CHECK = "https://licencias.trujotechnologies.com/api/check-update.php";
 
-        // El servidor debe devolver JSON:
-        // { "version":"1.0.7",
-        //   "url":"https://licencias.trujotechnologies.com/releases/SistemaBiometricoPolicia-1.0.7-setup.exe",
-        //   "notas":"..." }
-
-        [DataContract]
-        private class VersionInfo
-        {
-            [DataMember(Name = "version")] public string Version { get; set; }
-            [DataMember(Name = "url")] public string Url { get; set; }
-            [DataMember(Name = "notas")] public string Notas { get; set; }
-        }
-
+        // ─── Versión local (lee AssemblyVersion del ejecutable) ───────────────
         public static Version GetLocalVersion()
         {
-            try
-            {
-                var assembly = Assembly.GetExecutingAssembly();
-                var versionInfo = assembly.GetName().Version;
-                return versionInfo ?? new Version(1, 0, 0, 0);
-            }
-            catch
-            {
-                return new Version(1, 0, 0, 0);
-            }
+            return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         }
 
-        public static async Task CheckForUpdatesAsync(Form parentForm)
-        {
-            try
-            {
-                var localVersion = GetLocalVersion();
-                VersionInfo infoRemota = await GetRemoteInfoAsync();
-
-                if (infoRemota == null || string.IsNullOrWhiteSpace(infoRemota.Version))
-                {
-                    StatusHub.PushEvento("⚠ No se pudo verificar actualizaciones (sin internet, servidor no disponible o respuesta inválida)");
-                    return;
-                }
-
-                if (!Version.TryParse(infoRemota.Version, out var remoteVersion))
-                {
-                    StatusHub.PushEvento($"⚠ Versión remota inválida: {infoRemota.Version}");
-                    return;
-                }
-
-                if (remoteVersion <= localVersion)
-                {
-                    StatusHub.PushEvento($"✓ Sistema actualizado (v{localVersion})");
-                    return;
-                }
-
-                var message = $"🔔 HAY UNA NUEVA VERSIÓN DISPONIBLE\n\n" +
-                              $"Versión actual: {localVersion}\n" +
-                              $"Versión nueva: {remoteVersion}\n\n" +
-                              $"{infoRemota.Notas}\n\n" +
-                              "¿Desea descargar e instalar la actualización ahora?\n\n" +
-                              "NOTA: El sistema se cerrará durante la instalación.";
-
-                var result = MessageBox.Show(parentForm, message,
-                    "Actualización Disponible - TRUJO TECHNOLOGIES",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-
-                if (result == DialogResult.Yes)
-                {
-                    await DownloadAndRunInstallerAsync(infoRemota, remoteVersion, parentForm);
-                }
-                else
-                {
-                    StatusHub.PushEvento("⚠ Actualización pospuesta por el usuario");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogHelper.RegistrarError("Error general en CheckForUpdatesAsync", ex);
-            }
-        }
-
-        private static async Task<VersionInfo> GetRemoteInfoAsync()
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.Timeout = TimeSpan.FromSeconds(10);
-                    var json = await client.GetStringAsync(URL_UPDATE);
-
-                    if (string.IsNullOrWhiteSpace(json))
-                        return null;
-
-                    var ser = new DataContractJsonSerializer(typeof(VersionInfo));
-                    using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(json)))
-                    {
-                        var info = ser.ReadObject(ms) as VersionInfo;
-                        return info;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogHelper.RegistrarError("Error al obtener información de actualización remota", ex);
-                return null;
-            }
-        }
-
+        // ─── Versión remota (consulta el servidor) ────────────────────────────
         public static async Task<Version> GetRemoteVersionAsync()
         {
             try
             {
-                VersionInfo info = await GetRemoteInfoAsync();
+                string token = LicenciaService.TokenActual;
+                if (string.IsNullOrEmpty(token)) return null;
 
-                if (info == null || string.IsNullOrWhiteSpace(info.Version))
-                    return null;
+                string versionActual = GetLocalVersion().ToString();
+                string url = $"{URL_CHECK}?token={token}&version={versionActual}";
 
-                if (Version.TryParse(info.Version, out var version))
-                    return version;
+                System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12;
 
-                return null;
+                var response = await http.GetAsync(url);
+                if (!response.IsSuccessStatusCode) return null;
+
+                var json = await response.Content.ReadAsStringAsync();
+                var data = JObject.Parse(json);
+
+                if (data["ok"]?.Value<bool>() != true) return null;
+
+                string latestStr = data["latest_version"]?.ToString();
+                if (string.IsNullOrEmpty(latestStr)) return null;
+
+                return Version.TryParse(latestStr, out var v) ? v : null;
             }
-            catch
+            catch (Exception ex)
             {
+                LogHelper.RegistrarError("UpdateService.GetRemoteVersionAsync", ex);
                 return null;
             }
         }
 
-        private static async Task DownloadAndRunInstallerAsync(VersionInfo info, Version remoteVersion, Form parentForm)
+        // ─── Verificación automática al iniciar (llamada desde FormPrincipal) ─
+        public static async Task CheckForUpdatesAsync(Form owner)
         {
-            if (string.IsNullOrWhiteSpace(info.Url))
-            {
-                MessageBox.Show(parentForm,
-                    "❌ No se encontró URL de descarga en el servidor.\n" +
-                    "Contacte a TRUJO TECHNOLOGIES.",
-                    "Error en Actualización",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return;
-            }
-
-            string versionString = $"{remoteVersion.Major}.{remoteVersion.Minor}.{remoteVersion.Build}";
-            string fileName = Path.GetFileName(info.Url);
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                fileName = $"SistemaBiometricoPolicia-{versionString}-setup.exe";
-            }
-
-            string tempPath = Path.Combine(Path.GetTempPath(), fileName);
-
             try
             {
-                StatusHub.PushEvento($"📥 Descargando actualización desde {info.Url}...");
+                string token = LicenciaService.TokenActual;
+                if (string.IsNullOrEmpty(token)) return;
 
-                using (var client = new HttpClient())
+                string versionActual = GetLocalVersion().ToString();
+                string url = $"{URL_CHECK}?token={token}&version={versionActual}";
+
+                StatusHub.PushEvento("🔍 Buscando actualizaciones...");
+
+                System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12;
+
+                var response = await http.GetAsync(url);
+                if (!response.IsSuccessStatusCode) return;
+
+                var json = await response.Content.ReadAsStringAsync();
+                var data = JObject.Parse(json);
+
+                if (data["ok"]?.Value<bool>() != true) return;
+
+                bool hayUpdate = data["update_available"]?.Value<bool>() == true;
+
+                if (!hayUpdate)
                 {
-                    client.Timeout = TimeSpan.FromMinutes(15);
-                    using (var response = await client.GetAsync(info.Url, HttpCompletionOption.ResponseHeadersRead))
-                    {
-                        response.EnsureSuccessStatusCode();
-
-                        using (var stream = await response.Content.ReadAsStreamAsync())
-                        using (var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                        {
-                            await stream.CopyToAsync(fileStream);
-                        }
-                    }
+                    StatusHub.PushEvento("✅ Sistema actualizado.");
+                    return;
                 }
 
-                LogHelper.RegistrarEvento($"Instalador descargado en {tempPath}", "UPDATE");
-                StatusHub.PushEvento("✓ Descarga completada");
+                string nuevaVersion = data["latest_version"]?.ToString();
+                string urlDescarga = data["download_url"]?.ToString();
+                string notas = data["release_notes"]?.ToString();
 
-                var msg = "✅ DESCARGA COMPLETADA\n\n" +
-                          "La aplicación se cerrará para realizar la actualización.\n" +
-                          "Al finalizar la instalación, por favor abra el sistema nuevamente.\n\n" +
-                          "IMPORTANTE: No apague el equipo durante la instalación.";
+                StatusHub.PushEvento($"✨ Nueva versión disponible: {nuevaVersion}");
 
-                MessageBox.Show(parentForm, msg, "Instalación de Actualización",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                var respuesta = MessageBox.Show(owner,
+                    $"Nueva versión disponible: {nuevaVersion}\n\nNotas:\n{notas}\n\n¿Desea instalarla ahora?",
+                    "Actualización - TRUJO TECHNOLOGIES",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Information);
 
-                var psi = new ProcessStartInfo
-                {
-                    FileName = tempPath,
-                    UseShellExecute = true,
-                    Verb = "runas"
-                };
-
-                Process.Start(psi);
-                Application.Exit();
-            }
-            catch (HttpRequestException ex)
-            {
-                LogHelper.RegistrarError("Error de red al descargar actualización", ex);
-                MessageBox.Show(parentForm,
-                    "❌ No se pudo descargar la actualización.\n\n" +
-                    "Posibles causas:\n" +
-                    "• Sin conexión a internet\n" +
-                    "• Archivo no disponible en el servidor\n\n" +
-                    "Contacte a TRUJO TECHNOLOGIES:\n" +
-                    "+57 317 294 6935 | +57 312 590 5106",
-                    "Error en Actualización",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                if (respuesta == DialogResult.Yes)
+                    await DescargarEInstalar(urlDescarga, nuevaVersion);
             }
             catch (Exception ex)
             {
-                LogHelper.RegistrarError("Error al ejecutar el instalador de actualización", ex);
-                MessageBox.Show(parentForm,
-                    "❌ Error al ejecutar la actualización.\n\n" +
-                    $"Detalles: {ex.Message}\n\n" +
-                    "Contacte a soporte técnico.",
-                    "Error en Actualización",
+                StatusHub.PushEvento("✗ Error al verificar updates: " + ex.Message);
+                LogHelper.RegistrarError("UpdateService.CheckForUpdatesAsync", ex);
+            }
+        }
+
+        // ─── Descarga y ejecuta el instalador ────────────────────────────────
+        private static async Task DescargarEInstalar(string url, string version)
+        {
+            try
+            {
+                string tempPath = Path.Combine(Path.GetTempPath(), $"Setup_Biometrico_{version}.exe");
+
+                StatusHub.PushEvento("⬇ Descargando actualización...");
+
+                using (var client = new HttpClient())
+                {
+                    System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12;
+                    var bytes = await client.GetByteArrayAsync(url);
+                    File.WriteAllBytes(tempPath, bytes);
+                }
+
+                StatusHub.PushEvento("✅ Descarga completada. Preparando actualización...");
+
+                // PASO 1: Delay para terminar operaciones pendientes
+                await Task.Delay(1000);
+
+                // PASO 2: Liberar lector biométrico
+                try
+                {
+                    if (BiometricService.Instancia != null)
+                    {
+                        StatusHub.PushEvento("🛑 Liberando lector biométrico...");
+                        BiometricService.Instancia.Dispose();
+                    }
+                }
+                catch { }
+
+                // PASO 3: Forzar liberación de COM objects (evita RaceOnRCWCleanup)
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+
+                // PASO 4: Pausa para que el runtime libere los RCW
+                await Task.Delay(500);
+
+                // PASO 5: Lanzar instalador silencioso
+                StatusHub.PushEvento("🚀 Iniciando instalación silenciosa...");
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = tempPath,
+                    Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-",
+                    UseShellExecute = true,
+                    Verb = "runas"
+                });
+
+                // AGREGA ESTO:
+                MessageBox.Show("La actualización se está instalando en segundo plano.\n\nEl sistema se cerrará y se volverá a abrir automáticamente en unos segundos.",
+                    "Actualización en curso - TRUJO TECHNOLOGIES",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxIcon.Information);
+
+                LogHelper.RegistrarEvento("Cerrando app para actualización silenciosa a " + version, "UPDATE");
+
+                Environment.Exit(0);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.RegistrarError("Error crítico en actualización", ex);
+                MessageBox.Show("No se pudo completar la actualización automática:\n" + ex.Message,
+                    "Error de TRUJO TECHNOLOGIES", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }
