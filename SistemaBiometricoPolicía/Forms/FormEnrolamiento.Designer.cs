@@ -2,9 +2,16 @@
 {
     partial class FormEnrolamiento
     {
-#pragma warning disable CS0414
         private System.ComponentModel.IContainer components = null;
-#pragma warning restore CS0414
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
 
         private void InitializeComponent()
         {
@@ -15,8 +22,11 @@
             this.colApellidos = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colNombres = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colSeccion = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.txtFiltro = new System.Windows.Forms.TextBox();
+            this.lblFiltro = new System.Windows.Forms.Label();
             this.lblTotalPendientes = new System.Windows.Forms.Label();
             this.pnlDerecho = new System.Windows.Forms.Panel();
+            this.lblPasos = new System.Windows.Forms.Label();
             this.pnlBotones = new System.Windows.Forms.Panel();
             this.btnCancelar = new System.Windows.Forms.Button();
             this.btnGuardar = new System.Windows.Forms.Button();
@@ -65,6 +75,8 @@
             // pnlIzquierdo
             // 
             this.pnlIzquierdo.Controls.Add(this.lstEstudiantes);
+            this.pnlIzquierdo.Controls.Add(this.txtFiltro);
+            this.pnlIzquierdo.Controls.Add(this.lblFiltro);
             this.pnlIzquierdo.Controls.Add(this.lblTotalPendientes);
             this.pnlIzquierdo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlIzquierdo.Location = new System.Drawing.Point(3, 3);
@@ -83,10 +95,10 @@
             this.lstEstudiantes.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lstEstudiantes.FullRowSelect = true;
             this.lstEstudiantes.HideSelection = false;
-            this.lstEstudiantes.Location = new System.Drawing.Point(10, 35);
+            this.lstEstudiantes.Location = new System.Drawing.Point(10, 82);
             this.lstEstudiantes.Name = "lstEstudiantes";
-            this.lstEstudiantes.Size = new System.Drawing.Size(394, 649);
-            this.lstEstudiantes.TabIndex = 0;
+            this.lstEstudiantes.Size = new System.Drawing.Size(394, 602);
+            this.lstEstudiantes.TabIndex = 3;
             this.lstEstudiantes.UseCompatibleStateImageBehavior = false;
             this.lstEstudiantes.View = System.Windows.Forms.View.Details;
             this.lstEstudiantes.SelectedIndexChanged += new System.EventHandler(this.lstEstudiantes_SelectedIndexChanged);
@@ -110,6 +122,28 @@
             // 
             this.colSeccion.Text = "Sección";
             // 
+            // txtFiltro
+            // 
+            this.txtFiltro.Dock = System.Windows.Forms.DockStyle.Top;
+            this.txtFiltro.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.txtFiltro.Location = new System.Drawing.Point(10, 55);
+            this.txtFiltro.Name = "txtFiltro";
+            this.txtFiltro.Size = new System.Drawing.Size(394, 27);
+            this.txtFiltro.TabIndex = 2;
+            this.txtFiltro.TextChanged += new System.EventHandler(this.txtFiltro_TextChanged);
+            // 
+            // lblFiltro
+            // 
+            this.lblFiltro.AutoSize = true;
+            this.lblFiltro.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblFiltro.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblFiltro.Location = new System.Drawing.Point(10, 35);
+            this.lblFiltro.Name = "lblFiltro";
+            this.lblFiltro.Padding = new System.Windows.Forms.Padding(0, 5, 0, 0);
+            this.lblFiltro.Size = new System.Drawing.Size(104, 20);
+            this.lblFiltro.TabIndex = 1;
+            this.lblFiltro.Text = "BUSCAR CÉDULA:";
+            // 
             // lblTotalPendientes
             // 
             this.lblTotalPendientes.BackColor = System.Drawing.Color.Navy;
@@ -119,12 +153,13 @@
             this.lblTotalPendientes.Location = new System.Drawing.Point(10, 10);
             this.lblTotalPendientes.Name = "lblTotalPendientes";
             this.lblTotalPendientes.Size = new System.Drawing.Size(394, 25);
-            this.lblTotalPendientes.TabIndex = 1;
+            this.lblTotalPendientes.TabIndex = 0;
             this.lblTotalPendientes.Text = "Estudiantes sin huella: 0";
             this.lblTotalPendientes.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // pnlDerecho
             // 
+            this.pnlDerecho.Controls.Add(this.lblPasos);
             this.pnlDerecho.Controls.Add(this.pnlBotones);
             this.pnlDerecho.Controls.Add(this.grpHuella);
             this.pnlDerecho.Controls.Add(this.grpFotos);
@@ -136,6 +171,20 @@
             this.pnlDerecho.Size = new System.Drawing.Size(774, 694);
             this.pnlDerecho.TabIndex = 1;
             // 
+            // lblPasos
+            // 
+            this.lblPasos.BackColor = System.Drawing.Color.LightGoldenrodYellow;
+            this.lblPasos.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblPasos.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblPasos.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.lblPasos.ForeColor = System.Drawing.Color.DarkOliveGreen;
+            this.lblPasos.Location = new System.Drawing.Point(10, 45);
+            this.lblPasos.Name = "lblPasos";
+            this.lblPasos.Size = new System.Drawing.Size(754, 30);
+            this.lblPasos.TabIndex = 1;
+            this.lblPasos.Text = "Paso 1: Seleccione un estudiante de la lista.";
+            this.lblPasos.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // pnlBotones
             // 
             this.pnlBotones.Controls.Add(this.btnCancelar);
@@ -144,7 +193,7 @@
             this.pnlBotones.Location = new System.Drawing.Point(10, 624);
             this.pnlBotones.Name = "pnlBotones";
             this.pnlBotones.Size = new System.Drawing.Size(754, 60);
-            this.pnlBotones.TabIndex = 3;
+            this.pnlBotones.TabIndex = 4;
             // 
             // btnCancelar
             // 
@@ -186,12 +235,11 @@
             this.grpHuella.Controls.Add(this.lblDedo);
             this.grpHuella.Controls.Add(this.cmbDedo);
             this.grpHuella.Controls.Add(this.pbHuella);
-            this.grpHuella.Dock = System.Windows.Forms.DockStyle.Top;
             this.grpHuella.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.grpHuella.Location = new System.Drawing.Point(10, 325);
+            this.grpHuella.Location = new System.Drawing.Point(10, 355);
             this.grpHuella.Name = "grpHuella";
-            this.grpHuella.Size = new System.Drawing.Size(754, 280);
-            this.grpHuella.TabIndex = 2;
+            this.grpHuella.Size = new System.Drawing.Size(754, 263);
+            this.grpHuella.TabIndex = 3;
             this.grpHuella.TabStop = false;
             this.grpHuella.Text = "👆 CAPTURA DE HUELLA DACTILAR";
             // 
@@ -211,30 +259,30 @@
             // 
             this.lblEstado.BackColor = System.Drawing.Color.LightGray;
             this.lblEstado.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblEstado.Location = new System.Drawing.Point(200, 210);
+            this.lblEstado.Location = new System.Drawing.Point(200, 200);
             this.lblEstado.Name = "lblEstado";
-            this.lblEstado.Size = new System.Drawing.Size(520, 50);
-            this.lblEstado.TabIndex = 6;
+            this.lblEstado.Size = new System.Drawing.Size(520, 45);
+            this.lblEstado.TabIndex = 7;
             this.lblEstado.Text = "Presione \'Iniciar Captura\' para comenzar";
             this.lblEstado.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lblProgreso
             // 
             this.lblProgreso.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblProgreso.Location = new System.Drawing.Point(200, 185);
+            this.lblProgreso.Location = new System.Drawing.Point(200, 175);
             this.lblProgreso.Name = "lblProgreso";
             this.lblProgreso.Size = new System.Drawing.Size(520, 20);
-            this.lblProgreso.TabIndex = 5;
+            this.lblProgreso.TabIndex = 6;
             this.lblProgreso.Text = "Muestras capturadas: 0/4";
             this.lblProgreso.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(200, 150);
+            this.progressBar.Location = new System.Drawing.Point(200, 140);
             this.progressBar.Maximum = 4;
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(520, 30);
-            this.progressBar.TabIndex = 4;
+            this.progressBar.TabIndex = 5;
             // 
             // btnIniciarCaptura
             // 
@@ -242,10 +290,10 @@
             this.btnIniciarCaptura.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnIniciarCaptura.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
             this.btnIniciarCaptura.ForeColor = System.Drawing.Color.White;
-            this.btnIniciarCaptura.Location = new System.Drawing.Point(200, 90);
+            this.btnIniciarCaptura.Location = new System.Drawing.Point(200, 85);
             this.btnIniciarCaptura.Name = "btnIniciarCaptura";
-            this.btnIniciarCaptura.Size = new System.Drawing.Size(520, 50);
-            this.btnIniciarCaptura.TabIndex = 3;
+            this.btnIniciarCaptura.Size = new System.Drawing.Size(520, 45);
+            this.btnIniciarCaptura.TabIndex = 4;
             this.btnIniciarCaptura.Text = "▶ INICIAR CAPTURA DE HUELLA (4 muestras)";
             this.btnIniciarCaptura.UseVisualStyleBackColor = false;
             this.btnIniciarCaptura.Click += new System.EventHandler(this.btnIniciarCaptura_Click);
@@ -278,7 +326,7 @@
             this.cmbDedo.Location = new System.Drawing.Point(200, 50);
             this.cmbDedo.Name = "cmbDedo";
             this.cmbDedo.Size = new System.Drawing.Size(520, 25);
-            this.cmbDedo.TabIndex = 1;
+            this.cmbDedo.TabIndex = 3;
             // 
             // pbHuella
             // 
@@ -287,7 +335,7 @@
             this.pbHuella.Name = "pbHuella";
             this.pbHuella.Size = new System.Drawing.Size(150, 200);
             this.pbHuella.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pbHuella.TabIndex = 0;
+            this.pbHuella.TabIndex = 1;
             this.pbHuella.TabStop = false;
             // 
             // grpFotos
@@ -299,10 +347,10 @@
             this.grpFotos.Controls.Add(this.pbWebcam);
             this.grpFotos.Dock = System.Windows.Forms.DockStyle.Top;
             this.grpFotos.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.grpFotos.Location = new System.Drawing.Point(10, 45);
+            this.grpFotos.Location = new System.Drawing.Point(10, 75);
             this.grpFotos.Name = "grpFotos";
             this.grpFotos.Size = new System.Drawing.Size(754, 280);
-            this.grpFotos.TabIndex = 1;
+            this.grpFotos.TabIndex = 2;
             this.grpFotos.TabStop = false;
             this.grpFotos.Text = "📸 CAPTURA DE FOTO";
             // 
@@ -382,6 +430,7 @@
             this.Text = "Enrolamiento de Huellas y Foto - TRUJO TECHNOLOGIES";
             this.tlpMain.ResumeLayout(false);
             this.pnlIzquierdo.ResumeLayout(false);
+            this.pnlIzquierdo.PerformLayout();
             this.pnlDerecho.ResumeLayout(false);
             this.pnlBotones.ResumeLayout(false);
             this.grpHuella.ResumeLayout(false);
@@ -422,5 +471,8 @@
         private System.Windows.Forms.Panel pnlBotones;
         private System.Windows.Forms.Button btnCancelar;
         private System.Windows.Forms.Button btnGuardar;
+        private System.Windows.Forms.TextBox txtFiltro;
+        private System.Windows.Forms.Label lblFiltro;
+        private System.Windows.Forms.Label lblPasos;
     }
 }

@@ -17,6 +17,15 @@ namespace SistemaBiometricoPolicia.Forms
         private string carpetaFotosConsumo;
         private bool formularioCerrado = false;
 
+        // ── Rangos de servicio (hora inicio, hora fin inclusive) ────────────────
+        // Cubren las 24 horas sin dejar ningún hueco
+        private static readonly (TimeSpan inicio, TimeSpan fin, string nombre)[] RangosServicio =
+        {
+            (new TimeSpan(0,  0, 0), new TimeSpan(10, 59, 59), "DESAYUNO"), // 00:00 - 10:59
+            (new TimeSpan(11, 0, 0), new TimeSpan(16, 59, 59), "ALMUERZO"), // 11:00 - 16:59
+            (new TimeSpan(17, 0, 0), new TimeSpan(23, 59, 59), "CENA"),     // 17:00 - 23:59
+        };
+
         public FormControlComedor()
         {
             InitializeComponent();
@@ -29,17 +38,13 @@ namespace SistemaBiometricoPolicia.Forms
         {
             try
             {
-                // 1. Inicializar biométrico
                 biometricService = new BiometricService();
                 biometricService.EstudianteIdentificado += BiometricService_EstudianteIdentificado;
                 biometricService.MensajeEstado += BiometricService_MensajeEstado;
                 biometricService.IniciarCaptura();
 
-                // 2. Inicializar webcam
                 if (WebcamHelper.HayWebcamDisponible())
-                {
                     WebcamHelper.Iniciar(pictureBoxFoto);
-                }
 
                 DeterminarServicioAutomatico();
                 ActualizarContadorRegistros();
@@ -49,35 +54,55 @@ namespace SistemaBiometricoPolicia.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al iniciar: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al iniciar: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
                 LogHelper.RegistrarError("FormControlComedor_Load", ex);
             }
         }
 
+        // ── Determina el servicio según la hora actual (cubre 24h) ──────────────
         private void DeterminarServicioAutomatico()
         {
             TimeSpan ahora = DateTime.Now.TimeOfDay;
+            string nuevoServicio = "DESAYUNO"; // fallback (nunca debería usarse)
 
-            if (ahora >= new TimeSpan(4, 30, 0) && ahora <= new TimeSpan(9, 30, 0))
-                servicioActual = "DESAYUNO";
-            else if (ahora >= new TimeSpan(11, 30, 0) && ahora <= new TimeSpan(15, 30, 0))
-                servicioActual = "ALMUERZO";
-            else if (ahora >= new TimeSpan(17, 30, 0) && ahora <= new TimeSpan(21, 30, 0))
-                servicioActual = "CENA";
-            else
-                servicioActual = "FUERA DE HORARIO";
-
-            if (lblServicio.Text != $"SERVICIO: {servicioActual}")
+            foreach (var rango in RangosServicio)
             {
+                if (ahora >= rango.inicio && ahora <= rango.fin)
+                {
+                    nuevoServicio = rango.nombre;
+                    break;
+                }
+            }
+
+            if (servicioActual != nuevoServicio)
+            {
+                servicioActual = nuevoServicio;
                 lblServicio.Text = $"SERVICIO: {servicioActual}";
-                lblServicio.BackColor = servicioActual == "FUERA DE HORARIO" ? Color.DarkRed : Color.DarkGreen;
+
+                // Color por servicio
+                switch (servicioActual)
+                {
+                    case "DESAYUNO":
+                        lblServicio.BackColor = Color.DarkOrange;
+                        break;
+                    case "ALMUERZO":
+                        lblServicio.BackColor = Color.DarkGreen;
+                        break;
+                    case "CENA":
+                        lblServicio.BackColor = Color.DarkBlue;
+                        break;
+                }
+                lblServicio.ForeColor = Color.White;
+
+                LogHelper.RegistrarEvento($"Servicio cambiado automáticamente a: {servicioActual}", "SISTEMA");
             }
         }
 
+        // ── Callbacks del BiometricService ──────────────────────────────────────
         private void BiometricService_EstudianteIdentificado(object sender, EstudianteIdentificadoEventArgs e)
         {
             if (formularioCerrado || IsDisposed || !IsHandleCreated) return;
-
             try
             {
                 if (InvokeRequired)
@@ -93,7 +118,6 @@ namespace SistemaBiometricoPolicia.Forms
         private void BiometricService_MensajeEstado(object sender, string mensaje)
         {
             if (formularioCerrado || IsDisposed || !IsHandleCreated) return;
-
             try
             {
                 if (InvokeRequired)
@@ -107,21 +131,16 @@ namespace SistemaBiometricoPolicia.Forms
             catch { }
         }
 
+        // ── Lógica principal de identificación ──────────────────────────────────
         private void ProcesarIdentificacion(int estudianteId)
         {
             try
             {
-                if (servicioActual == "FUERA DE HORARIO")
-                {
-                    MostrarMensaje("FUERA DE HORARIO", Color.Red);
-                    SoundHelper.PlayError();
-                    return;
-                }
-
+                // Ya NO hay bloqueo por "FUERA DE HORARIO" — opera 24h
                 if (ValidarSiYaConsumio(estudianteId, servicioActual))
                 {
                     CargarDatosEstudiante(estudianteId);
-                    MostrarMensaje("YA CONSUMIÓ " + servicioActual, Color.Orange);
+                    MostrarMensaje($"YA CONSUMIÓ {servicioActual}", Color.OrangeRed);
                     SoundHelper.PlayAlert();
                 }
                 else
@@ -129,7 +148,7 @@ namespace SistemaBiometricoPolicia.Forms
                     string fotoEvidencia = GuardarFotoEvidencia(estudianteId);
                     RegistrarConsumo(estudianteId, servicioActual, fotoEvidencia);
                     CargarDatosEstudiante(estudianteId);
-                    MostrarMensaje("✓ REGISTRADO - ¡SIGA!", Color.Green);
+                    MostrarMensaje($"✓ {servicioActual} REGISTRADO - ¡SIGA!", Color.Green);
                     SoundHelper.PlaySuccess();
                     ActualizarContadorRegistros();
                 }
@@ -148,14 +167,19 @@ namespace SistemaBiometricoPolicia.Forms
             }
         }
 
+        // ── Validación: ¿ya consumió ESTE servicio hoy? ─────────────────────────
         private bool ValidarSiYaConsumio(int estudianteId, string servicio)
         {
             using (var conn = DatabaseHelper.ObtenerConexion())
             {
                 conn.Open();
-                string sql = @"SELECT COUNT(*) FROM RegistrosAlimentacion 
-                               WHERE EstudianteId = @id AND TipoServicio = @servicio 
-                               AND date(FechaHora) = date('now', 'localtime')";
+                // Compara por tipo de servicio Y por fecha local
+                const string sql = @"
+                    SELECT COUNT(*) FROM RegistrosAlimentacion 
+                    WHERE EstudianteId = @id 
+                      AND TipoServicio = @servicio 
+                      AND date(FechaHora) = date('now', 'localtime')";
+
                 using (var cmd = new SQLiteCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", estudianteId);
@@ -165,13 +189,18 @@ namespace SistemaBiometricoPolicia.Forms
             }
         }
 
+        // ── Registro en BD ──────────────────────────────────────────────────────
         private void RegistrarConsumo(int estudianteId, string servicio, string fotoPath)
         {
             using (var conn = DatabaseHelper.ObtenerConexion())
             {
                 conn.Open();
-                string sql = @"INSERT INTO RegistrosAlimentacion (EstudianteId, TipoServicio, FechaHora, FotoPath, Sincronizado)
-                       VALUES (@id, @servicio, datetime('now', 'localtime'), @foto, 0)";
+                const string sql = @"
+                    INSERT INTO RegistrosAlimentacion 
+                        (EstudianteId, TipoServicio, FechaHora, FotoPath, Sincronizado)
+                    VALUES 
+                        (@id, @servicio, datetime('now', 'localtime'), @foto, 0)";
+
                 using (var cmd = new SQLiteCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", estudianteId);
@@ -181,19 +210,18 @@ namespace SistemaBiometricoPolicia.Forms
                 }
             }
 
-            // ✅ NUEVO: Log de auditoría
             LogHelper.RegistrarEvento(
                 $"CONSUMO REGISTRADO - EstudianteId: {estudianteId} | Servicio: {servicio} | Foto: {fotoPath ?? "Sin foto"}",
-                "CONSUMO"
-            );
+                "CONSUMO");
         }
 
+        // ── Carga datos del estudiante en pantalla ──────────────────────────────
         private void CargarDatosEstudiante(int id)
         {
             using (var conn = DatabaseHelper.ObtenerConexion())
             {
                 conn.Open();
-                string sql = "SELECT * FROM Estudiantes WHERE Id = @id";
+                const string sql = "SELECT * FROM Estudiantes WHERE Id = @id";
                 using (var cmd = new SQLiteCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", id);
@@ -211,19 +239,13 @@ namespace SistemaBiometricoPolicia.Forms
                                 WebcamHelper.Detener();
                                 try
                                 {
-                                    if (File.Exists(rutaFoto))
-                                    {
-                                        using (var img = Image.FromFile(rutaFoto))
-                                        {
-                                            pictureBoxFoto.Image = new Bitmap(img);
-                                        }
-                                    }
+                                    using (var img = Image.FromFile(rutaFoto))
+                                        pictureBoxFoto.Image = new Bitmap(img);
                                 }
                                 catch { }
                             }
                             else
                             {
-                                // Sin foto registrada: mantener webcam activa mostrando al policía en vivo
                                 if (!WebcamHelper.EstaActiva())
                                     WebcamHelper.Iniciar(pictureBoxFoto);
                             }
@@ -233,6 +255,7 @@ namespace SistemaBiometricoPolicia.Forms
             }
         }
 
+        // ── Captura foto de evidencia ───────────────────────────────────────────
         private string GuardarFotoEvidencia(int estudianteId)
         {
             var foto = WebcamHelper.CapturarFoto();
@@ -242,9 +265,11 @@ namespace SistemaBiometricoPolicia.Forms
             {
                 string fecha = DateTime.Now.ToString("yyyy-MM-dd");
                 string subCarpeta = Path.Combine(carpetaFotosConsumo, fecha);
-                if (!Directory.Exists(subCarpeta)) Directory.CreateDirectory(subCarpeta);
+                if (!Directory.Exists(subCarpeta))
+                    Directory.CreateDirectory(subCarpeta);
 
-                string fileName = Path.Combine(subCarpeta, $"{estudianteId}_{DateTime.Now:HHmmss}.jpg");
+                string fileName = Path.Combine(subCarpeta,
+                    $"{estudianteId}_{servicioActual}_{DateTime.Now:HHmmss}.jpg");
                 foto.Save(fileName, System.Drawing.Imaging.ImageFormat.Jpeg);
                 foto.Dispose();
                 return fileName;
@@ -252,6 +277,7 @@ namespace SistemaBiometricoPolicia.Forms
             catch { return null; }
         }
 
+        // ── UI helpers ──────────────────────────────────────────────────────────
         private void MostrarMensaje(string texto, Color color)
         {
             lblEstado.Text = texto;
@@ -262,17 +288,12 @@ namespace SistemaBiometricoPolicia.Forms
 
         private void ActualizarContadorRegistros()
         {
-            using (var conn = DatabaseHelper.ObtenerConexion())
-            {
-                conn.Open();
-                string sql = "SELECT COUNT(*) FROM RegistrosAlimentacion WHERE date(FechaHora) = date('now', 'localtime')";
-                using (var cmd = new SQLiteCommand(sql, conn))
-                {
-                    lblRegistrosHoy.Text = $"REGISTROS HOY: {cmd.ExecuteScalar()}";
-                }
-            }
+            var stats = DatabaseHelper.ObtenerEstadisticasHoy();
+            lblRegistrosHoy.Text =
+                $"HOY: {stats.total} registros  |  🍳 {stats.desayunos}  🍽 {stats.almuerzos}  🌙 {stats.cenas}";
         }
 
+        // ── Timers ──────────────────────────────────────────────────────────────
         private void timerLimpiar_Tick(object sender, EventArgs e)
         {
             timerLimpiar.Stop();
@@ -283,28 +304,23 @@ namespace SistemaBiometricoPolicia.Forms
             lblSeccion.Text = "SECCIÓN: ---";
             lblDocumento.Text = "DOC: ---";
 
-            if (pictureBoxFoto.Image != null)
-            {
-                pictureBoxFoto.Image.Dispose();
-                pictureBoxFoto.Image = null;
-            }
+            pictureBoxFoto.Image?.Dispose();
+            pictureBoxFoto.Image = null;
 
             if (WebcamHelper.HayWebcamDisponible())
-            {
                 WebcamHelper.Iniciar(pictureBoxFoto);
-            }
         }
 
         private void timerReloj_Tick(object sender, EventArgs e)
         {
             lblHora.Text = DateTime.Now.ToString("HH:mm:ss");
-            DeterminarServicioAutomatico();
+            DeterminarServicioAutomatico(); // Cambia servicio automáticamente al cruzar el umbral
         }
 
+        // ── Cierre ──────────────────────────────────────────────────────────────
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             formularioCerrado = true;
-
             try
             {
                 timerReloj.Stop();
@@ -314,23 +330,18 @@ namespace SistemaBiometricoPolicia.Forms
                 {
                     biometricService.EstudianteIdentificado -= BiometricService_EstudianteIdentificado;
                     biometricService.MensajeEstado -= BiometricService_MensajeEstado;
-                    biometricService?.Dispose();
+                    biometricService.Dispose();
                     biometricService = null;
                 }
 
                 WebcamHelper.Detener();
-
-                if (pictureBoxFoto.Image != null)
-                {
-                    pictureBoxFoto.Image.Dispose();
-                    pictureBoxFoto.Image = null;
-                }
+                pictureBoxFoto.Image?.Dispose();
+                pictureBoxFoto.Image = null;
             }
             catch (Exception ex)
             {
                 LogHelper.RegistrarError("Error al cerrar FormControlComedor", ex);
             }
-
             base.OnFormClosing(e);
         }
     }

@@ -167,5 +167,46 @@ namespace SistemaBiometricoPolicia.Data
                 }
             }
         }
+
+        /// <summary>
+        /// Retorna conteo de registros de hoy desglosado por tipo de servicio.
+        /// </summary>
+        public static (int total, int desayunos, int almuerzos, int cenas) ObtenerEstadisticasHoy()
+        {
+            try
+            {
+                using (var conn = ObtenerConexion())
+                {
+                    conn.Open();
+                    const string sql = @"
+                SELECT 
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN TipoServicio = 'DESAYUNO' THEN 1 ELSE 0 END) AS desayunos,
+                    SUM(CASE WHEN TipoServicio = 'ALMUERZO' THEN 1 ELSE 0 END) AS almuerzos,
+                    SUM(CASE WHEN TipoServicio = 'CENA'     THEN 1 ELSE 0 END) AS cenas
+                FROM RegistrosAlimentacion
+                WHERE date(FechaHora) = date('now', 'localtime')";
+
+                    using (var cmd = new SQLiteCommand(sql, conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return (
+                                Convert.ToInt32(reader["total"]),
+                                Convert.ToInt32(reader["desayunos"]),
+                                Convert.ToInt32(reader["almuerzos"]),
+                                Convert.ToInt32(reader["cenas"])
+                            );
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.RegistrarError("Error en ObtenerEstadisticasHoy", ex);
+            }
+            return (0, 0, 0, 0);
+        }
     }
 }

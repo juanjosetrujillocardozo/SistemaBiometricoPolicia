@@ -2,6 +2,7 @@ using AForge.Video;
 using AForge.Video.DirectShow;
 using System;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace SistemaBiometricoPolicia.Utils
@@ -11,6 +12,7 @@ namespace SistemaBiometricoPolicia.Utils
         private static VideoCaptureDevice videoSource;
         private static PictureBox pictureBoxDestino;
         private static Bitmap ultimoFrame;
+        private static readonly object _lockFrame = new object();  // ? NUEVO: lock para thread safety
 
         public static bool HayWebcamDisponible()
         {
@@ -18,18 +20,19 @@ namespace SistemaBiometricoPolicia.Utils
             return videoDevices.Count > 0;
         }
 
-        // ? MÉTODO ESTÁTICO: Iniciar
         public static void Iniciar(PictureBox pictureBox)
         {
             try
             {
+                // ? NUEVO: Si ya está corriendo, detener primero
+                if (videoSource != null && videoSource.IsRunning)
+                    Detener();
+
                 pictureBoxDestino = pictureBox;
 
                 var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
                 if (videoDevices.Count == 0)
-                {
                     throw new Exception("No se encontró ninguna cámara web conectada.");
-                }
 
                 videoSource = new VideoCaptureDevice(videoDevices[0].MonikerString);
                 videoSource.NewFrame += VideoSource_NewFrame;
@@ -45,25 +48,28 @@ namespace SistemaBiometricoPolicia.Utils
         {
             try
             {
+                // ? NUEVO: Verificar que el destino no esté destruido antes de procesar
+                if (pictureBoxDestino == null || pictureBoxDestino.IsDisposed) return;
+
                 Bitmap frame = (Bitmap)eventArgs.Frame.Clone();
 
-                if (pictureBoxDestino != null)
+                // ? NUEVO: Guardar ultimoFrame con lock para thread safety
+                lock (_lockFrame)
                 {
-                    if (pictureBoxDestino.InvokeRequired)
-                    {
-                        pictureBoxDestino.BeginInvoke(new Action(() =>
-                        {
-                            ActualizarImagenPictureBox(frame);
-                        }));
-                    }
-                    else
-                    {
-                        ActualizarImagenPictureBox(frame);
-                    }
+                    ultimoFrame?.Dispose();
+                    ultimoFrame = (Bitmap)frame.Clone();
                 }
 
-                ultimoFrame?.Dispose();
-                ultimoFrame = (Bitmap)frame.Clone();
+                pictureBoxDestino.BeginInvoke(new Action(() =>
+                {
+                    // ? NUEVO: Doble check dentro del BeginInvoke (puede ejecutarse tarde)
+                    if (pictureBoxDestino == null || pictureBoxDestino.IsDisposed)
+                    {
+                        frame.Dispose();
+                        return;
+                    }
+                    ActualizarImagenPictureBox(frame);
+                }));
             }
             catch { }
         }
@@ -72,6 +78,11 @@ namespace SistemaBiometricoPolicia.Utils
         {
             try
             {
+                if (pictureBoxDestino == null || pictureBoxDestino.IsDisposed)
+                {
+                    nuevoFrame?.Dispose();  // ? NUEVO: Evitar leak si el destino ya no existe
+                    return;
+                }
                 var viejaImagen = pictureBoxDestino.Image;
                 pictureBoxDestino.Image = nuevoFrame;
                 viejaImagen?.Dispose();
@@ -81,26 +92,19 @@ namespace SistemaBiometricoPolicia.Utils
 
         public static bool EstaActiva()
         {
-            try
-            {
-                return videoSource != null && videoSource.IsRunning;
-            }
-            catch
-            {
-                return false;
-            }
+            try { return videoSource != null && videoSource.IsRunning; }
+            catch { return false; }
         }
 
-        // ? MÉTODO ESTÁTICO: CapturarFoto
         public static Bitmap CapturarFoto()
         {
-            if (ultimoFrame == null)
-                return null;
-
-            return (Bitmap)ultimoFrame.Clone();
+            // ? NUEVO: Lock para leer ultimoFrame de forma segura
+            lock (_lockFrame)
+            {
+                return ultimoFrame != null ? (Bitmap)ultimoFrame.Clone() : null;
+            }
         }
 
-        // ? MÉTODO ESTÁTICO: Detener
         public static void Detener()
         {
             try
@@ -112,19 +116,27 @@ namespace SistemaBiometricoPolicia.Utils
                     if (videoSource.IsRunning)
                     {
                         videoSource.SignalToStop();
-                        videoSource.Stop();
+                        videoSource.WaitForStop();  // ? CORREGIDO: WaitForStop en lugar de Stop()
                     }
                     videoSource = null;
                 }
 
-                if (pictureBoxDestino != null)
+                // ? NUEVO: Limpiar ultimoFrame con lock
+                lock (_lockFrame)
                 {
-                    pictureBoxDestino.Image?.Dispose();
-                    pictureBoxDestino.Image = null;
+                    ultimoFrame?.Dispose();
+                    ultimoFrame = null;
                 }
 
-                ultimoFrame?.Dispose();
-                ultimoFrame = null;
+                if (pictureBoxDestino != null)
+                {
+                    if (!pictureBoxDestino.IsDisposed)
+                    {
+                        pictureBoxDestino.Image?.Dispose();
+                        pictureBoxDestino.Image = null;
+                    }
+                    pictureBoxDestino = null;  // ? NUEVO: Soltar referencia siempre
+                }
             }
             catch (Exception ex)
             {
