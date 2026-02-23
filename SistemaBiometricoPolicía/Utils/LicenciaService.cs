@@ -16,13 +16,12 @@ namespace SistemaBiometricoPolicia.Utils
         public static bool LicenciaValida { get; private set; } = false;
         public static string MensajeEstado { get; private set; } = "Verificando...";
 
-        public static async Task<bool> ValidarLicenciaAsync()
+        public static async Task<bool> ValidarLicenciaAsync(string metodo = "inicio_sistema")
         {
 #if DEBUG
-            // En modo DEBUG siempre válido (sin warnings en Release)
-            LicenciaValida = true;
-            MensajeEstado = "Licencia Activa (Modo desarrollador)";
-            return true;
+    LicenciaValida = true;
+    MensajeEstado = "Licencia Activa (Modo desarrollador)";
+    return true;
 #else
             if (MODO_DESARROLLADOR)
             {
@@ -57,8 +56,7 @@ namespace SistemaBiometricoPolicia.Utils
                             return false;
                         }
 
-                        // 🔧 Evitar deadlock en UI
-                        await VerificarRemotamente(token).ConfigureAwait(false);
+                        await VerificarRemotamente(token, metodo).ConfigureAwait(false);
 
                         string estadoActualizado;
                         using (var cmdEstado = new SQLiteCommand("SELECT Estado FROM Licencia LIMIT 1", conn))
@@ -104,7 +102,7 @@ namespace SistemaBiometricoPolicia.Utils
             }
         }
 
-        private static async Task VerificarRemotamente(string token)
+        private static async Task VerificarRemotamente(string token, string metodo = "inicio_sistema")
         {
             try
             {
@@ -112,10 +110,12 @@ namespace SistemaBiometricoPolicia.Utils
                 {
                     client.Timeout = TimeSpan.FromSeconds(5);
 
-                    // 🔧 Evitar capturar el contexto de sincronización (UI)
-                    var response = await client
-                        .GetStringAsync($"{URL_VALIDACION}?token={token}")
-                        .ConfigureAwait(false);
+                    string pcName = Uri.EscapeDataString(Environment.MachineName);
+                    string userName = Uri.EscapeDataString(Environment.UserName);
+
+                    string url = $"{URL_VALIDACION}?token={token}&metodo={metodo}&pc={pcName}&user={userName}";
+
+                    var response = await client.GetStringAsync(url).ConfigureAwait(false);
 
                     if (response != null && response.Trim().ToUpper().Contains("BLOQUEAR"))
                     {
@@ -131,9 +131,14 @@ namespace SistemaBiometricoPolicia.Utils
             }
             catch (Exception ex)
             {
-                // Si falla la conexión, NO bloquear (puede ser problema de red temporal)
-                LogHelper.RegistrarError("Error al verificar licencia remotamente (se mantiene estado local)", ex);
+                LogHelper.RegistrarError("Error al verificar licencia remotamente", ex);
             }
+        }
+
+        public static bool ValidarLicencia()
+        {
+            // Sigue siendo sync-friendly para el código existente
+            return ValidarLicenciaAsync().GetAwaiter().GetResult();
         }
 
         private static void ActualizarEstadoLocal(string nuevoEstado)
@@ -156,10 +161,5 @@ namespace SistemaBiometricoPolicia.Utils
             }
         }
 
-        public static bool ValidarLicencia()
-        {
-            // Sigue siendo sync-friendly para el código existente
-            return ValidarLicenciaAsync().GetAwaiter().GetResult();
-        }
     }
 }

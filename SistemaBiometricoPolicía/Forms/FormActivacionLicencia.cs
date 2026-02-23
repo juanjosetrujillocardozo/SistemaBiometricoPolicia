@@ -14,10 +14,6 @@ namespace SistemaBiometricoPolicia.Forms
             OcultarControlesObsoletos();
         }
 
-        /// <summary>
-        /// El campo txtClaveMaestra y su label quedan en el Designer por compatibilidad,
-        /// pero ya no se usan: la validación real es responsabilidad del servidor HTTPS.
-        /// </summary>
         private void OcultarControlesObsoletos()
         {
             foreach (Control ctrl in Controls)
@@ -41,10 +37,11 @@ namespace SistemaBiometricoPolicia.Forms
             DateTime fechaExpiracion = DateTime.Now.AddMonths(meses);
 
             btnActivar.Enabled = false;
-            btnActivar.Text    = "Validando...";
+            btnActivar.Text = "Validando...";
+
             try
             {
-                // 1. Persistir token localmente para que ValidarLicenciaAsync() lo lea
+                // 1. Persistir token localmente
                 using (var conn = DatabaseHelper.ObtenerConexion())
                 {
                     conn.Open();
@@ -82,16 +79,16 @@ namespace SistemaBiometricoPolicia.Forms
                     }
                 }
 
-                // 2. El servidor HTTPS determina si el token es realmente válido
-                bool valida = await LicenciaService.ValidarLicenciaAsync();
+                // 2. Validar contra el servidor (registra "activacion_manual" en el log)
+                bool valida = await LicenciaService.ValidarLicenciaAsync("activacion_manual");
 
                 if (valida)
                 {
                     LogHelper.RegistrarEvento($"Licencia activada hasta: {fechaExpiracion:dd/MM/yyyy}", "ADMIN");
                     MessageBox.Show(
-                        $"✅ Licencia activada exitosamente\n\n"                  +
-                        $"Token: {token}\n"                                       +
-                        $"Válida hasta: {fechaExpiracion:dd/MM/yyyy HH:mm}\n\n"  +
+                        $"✅ Licencia activada exitosamente\n\n" +
+                        $"Token: {token}\n" +
+                        $"Válida hasta: {fechaExpiracion:dd/MM/yyyy HH:mm}\n\n" +
                         $"TRUJO TECHNOLOGIES S.A.S.",
                         "Activación Exitosa",
                         MessageBoxButtons.OK,
@@ -102,8 +99,8 @@ namespace SistemaBiometricoPolicia.Forms
                 {
                     LogHelper.RegistrarEvento($"Token rechazado por servidor: {token}", "ADMIN");
                     MessageBox.Show(
-                        $"❌ Token inválido o rechazado por el servidor.\n\n"  +
-                        $"Verifique el token e intente nuevamente.\n"          +
+                        $"❌ Token inválido o rechazado por el servidor.\n\n" +
+                        $"Verifique el token e intente nuevamente.\n" +
                         $"Soporte: +57 317 294 6935",
                         "Activación Fallida",
                         MessageBoxButtons.OK,
@@ -119,7 +116,7 @@ namespace SistemaBiometricoPolicia.Forms
             finally
             {
                 btnActivar.Enabled = true;
-                btnActivar.Text    = "Activar Licencia";
+                btnActivar.Text = "Activar Licencia";
             }
         }
 

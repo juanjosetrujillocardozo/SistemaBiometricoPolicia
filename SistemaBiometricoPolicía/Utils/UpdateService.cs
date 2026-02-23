@@ -3,6 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -10,14 +13,22 @@ namespace SistemaBiometricoPolicia.Utils
 {
     public static class UpdateService
     {
-        private const string VERSION_URL = "https://licencias.trujotechnologies.com/version.txt";
-        private const string SETUP_BASE_URL = "https://licencias.trujotechnologies.com";
-        private const string SETUP_FILE_PREFIX = "SistemaBiometricoPolicia-";
-        private const string SETUP_FILE_SUFFIX = "-setup.exe";
+        private const string URL_UPDATE =
+            "https://licencias.trujotechnologies.com/update-check.php";
 
-        /// <summary>
-        /// Obtiene la versión actual de la aplicación desde el Assembly.
-        /// </summary>
+        // El servidor debe devolver JSON:
+        // { "version":"1.0.7",
+        //   "url":"https://licencias.trujotechnologies.com/releases/SistemaBiometricoPolicia-1.0.7-setup.exe",
+        //   "notas":"..." }
+
+        [DataContract]
+        private class VersionInfo
+        {
+            [DataMember(Name = "version")] public string Version { get; set; }
+            [DataMember(Name = "url")] public string Url { get; set; }
+            [DataMember(Name = "notas")] public string Notas { get; set; }
+        }
+
         public static Version GetLocalVersion()
         {
             try
@@ -32,49 +43,22 @@ namespace SistemaBiometricoPolicia.Utils
             }
         }
 
-        /// <summary>
-        /// Descarga la versión disponible en el servidor (version.txt).
-        /// Retorna null si falla.
-        /// </summary>
-        public static async Task<Version> GetRemoteVersionAsync()
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.Timeout = TimeSpan.FromSeconds(10);
-                    var content = await client.GetStringAsync(VERSION_URL);
-                    if (string.IsNullOrWhiteSpace(content))
-                        return null;
-
-                    var versionString = content.Trim();
-                    if (Version.TryParse(versionString, out var version))
-                    {
-                        return version;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogHelper.RegistrarError("Error al obtener versión remota", ex);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Compara versión local vs remota y, si hay nueva, ofrece actualizar.
-        /// </summary>
         public static async Task CheckForUpdatesAsync(Form parentForm)
         {
             try
             {
                 var localVersion = GetLocalVersion();
-                var remoteVersion = await GetRemoteVersionAsync();
+                VersionInfo infoRemota = await GetRemoteInfoAsync();
 
-                if (remoteVersion == null)
+                if (infoRemota == null || string.IsNullOrWhiteSpace(infoRemota.Version))
                 {
-                    StatusHub.PushEvento("⚠ No se pudo verificar actualizaciones (sin internet o servidor no disponible)");
+                    StatusHub.PushEvento("⚠ No se pudo verificar actualizaciones (sin internet, servidor no disponible o respuesta inválida)");
+                    return;
+                }
+
+                if (!Version.TryParse(infoRemota.Version, out var remoteVersion))
+                {
+                    StatusHub.PushEvento($"⚠ Versión remota inválida: {infoRemota.Version}");
                     return;
                 }
 
@@ -87,15 +71,17 @@ namespace SistemaBiometricoPolicia.Utils
                 var message = $"🔔 HAY UNA NUEVA VERSIÓN DISPONIBLE\n\n" +
                               $"Versión actual: {localVersion}\n" +
                               $"Versión nueva: {remoteVersion}\n\n" +
+                              $"{infoRemota.Notas}\n\n" +
                               "¿Desea descargar e instalar la actualización ahora?\n\n" +
                               "NOTA: El sistema se cerrará durante la instalación.";
 
-                var result = MessageBox.Show(parentForm, message, "Actualización Disponible - TRUJO TECHNOLOGIES",
+                var result = MessageBox.Show(parentForm, message,
+                    "Actualización Disponible - TRUJO TECHNOLOGIES",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 
                 if (result == DialogResult.Yes)
                 {
-                    await DownloadAndRunInstallerAsync(remoteVersion, parentForm);
+                    await DownloadAndRunInstallerAsync(infoRemota, remoteVersion, parentForm);
                 }
                 else
                 {
@@ -108,22 +94,83 @@ namespace SistemaBiometricoPolicia.Utils
             }
         }
 
-        private static async Task DownloadAndRunInstallerAsync(Version remoteVersion, Form parentForm)
+        private static async Task<VersionInfo> GetRemoteInfoAsync()
         {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    var json = await client.GetStringAsync(URL_UPDATE);
+
+                    if (string.IsNullOrWhiteSpace(json))
+                        return null;
+
+                    var ser = new DataContractJsonSerializer(typeof(VersionInfo));
+                    using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(json)))
+                    {
+                        var info = ser.ReadObject(ms) as VersionInfo;
+                        return info;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.RegistrarError("Error al obtener información de actualización remota", ex);
+                return null;
+            }
+        }
+
+        public static async Task<Version> GetRemoteVersionAsync()
+        {
+            try
+            {
+                VersionInfo info = await GetRemoteInfoAsync();
+
+                if (info == null || string.IsNullOrWhiteSpace(info.Version))
+                    return null;
+
+                if (Version.TryParse(info.Version, out var version))
+                    return version;
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static async Task DownloadAndRunInstallerAsync(VersionInfo info, Version remoteVersion, Form parentForm)
+        {
+            if (string.IsNullOrWhiteSpace(info.Url))
+            {
+                MessageBox.Show(parentForm,
+                    "❌ No se encontró URL de descarga en el servidor.\n" +
+                    "Contacte a TRUJO TECHNOLOGIES.",
+                    "Error en Actualización",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
             string versionString = $"{remoteVersion.Major}.{remoteVersion.Minor}.{remoteVersion.Build}";
-            string setupFileName = SETUP_FILE_PREFIX + versionString + SETUP_FILE_SUFFIX;
-            string setupUrl = SETUP_BASE_URL + "/" + setupFileName;
-            string tempPath = Path.Combine(Path.GetTempPath(), setupFileName);
+            string fileName = Path.GetFileName(info.Url);
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                fileName = $"SistemaBiometricoPolicia-{versionString}-setup.exe";
+            }
+
+            string tempPath = Path.Combine(Path.GetTempPath(), fileName);
 
             try
             {
-                StatusHub.PushEvento($"📥 Descargando actualización desde {setupUrl}...");
+                StatusHub.PushEvento($"📥 Descargando actualización desde {info.Url}...");
 
                 using (var client = new HttpClient())
                 {
-                    client.Timeout = TimeSpan.FromMinutes(15); // Aumentado para conexiones lentas
-
-                    using (var response = await client.GetAsync(setupUrl, HttpCompletionOption.ResponseHeadersRead))
+                    client.Timeout = TimeSpan.FromMinutes(15);
+                    using (var response = await client.GetAsync(info.Url, HttpCompletionOption.ResponseHeadersRead))
                     {
                         response.EnsureSuccessStatusCode();
 
@@ -143,14 +190,14 @@ namespace SistemaBiometricoPolicia.Utils
                           "Al finalizar la instalación, por favor abra el sistema nuevamente.\n\n" +
                           "IMPORTANTE: No apague el equipo durante la instalación.";
 
-                MessageBox.Show(parentForm, msg, "Instalación de Actualización", MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                MessageBox.Show(parentForm, msg, "Instalación de Actualización",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 var psi = new ProcessStartInfo
                 {
                     FileName = tempPath,
                     UseShellExecute = true,
-                    Verb = "runas" // Ejecutar como administrador
+                    Verb = "runas"
                 };
 
                 Process.Start(psi);
