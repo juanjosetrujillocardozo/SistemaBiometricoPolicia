@@ -85,7 +85,6 @@ namespace SistemaBiometricoPolicia.Utils
 #endif
         }
 
-        // Añade esto dentro de la clase LicenciaService
         public static string TokenActual
         {
             get
@@ -124,6 +123,54 @@ namespace SistemaBiometricoPolicia.Utils
             catch
             {
                 return "ERROR";
+            }
+        }
+
+        public static string ObtenerUltimaVerificacion()
+        {
+            try
+            {
+                using (var conn = DatabaseHelper.ObtenerConexion())
+                {
+                    conn.Open();
+                    using (var cmd = new SQLiteCommand(
+                        "SELECT UltimaVerificacionRemota FROM Licencia LIMIT 1", conn))
+                    {
+                        var val = cmd.ExecuteScalar();
+                        if (val == null || val == DBNull.Value) return "Nunca verificado";
+                        if (DateTime.TryParse(val.ToString(), out var dt))
+                            return dt.ToString("dd/MM/yyyy HH:mm");
+                        return val.ToString();
+                    }
+                }
+            }
+            catch
+            {
+                return "No disponible";
+            }
+        }
+
+        public static string ObtenerFechaExpiracion()
+        {
+            try
+            {
+                using (var conn = DatabaseHelper.ObtenerConexion())
+                {
+                    conn.Open();
+                    using (var cmd = new SQLiteCommand(
+                        "SELECT FechaExpiracion FROM Licencia LIMIT 1", conn))
+                    {
+                        var val = cmd.ExecuteScalar();
+                        if (val == null || val == DBNull.Value) return "No configurada";
+                        if (DateTime.TryParse(val.ToString(), out var dt))
+                            return dt.ToString("dd/MM/yyyy");
+                        return val.ToString();
+                    }
+                }
+            }
+            catch
+            {
+                return "No disponible";
             }
         }
 
@@ -173,7 +220,8 @@ namespace SistemaBiometricoPolicia.Utils
                 using (var conn = DatabaseHelper.ObtenerConexion())
                 {
                     conn.Open();
-                    using (var cmd = new SQLiteCommand("UPDATE Licencia SET Estado = @estado", conn))
+                    using (var cmd = new SQLiteCommand(
+                        "UPDATE Licencia SET Estado = @estado, UltimaVerificacionRemota = datetime('now')", conn))
                     {
                         cmd.Parameters.AddWithValue("@estado", nuevoEstado);
                         cmd.ExecuteNonQuery();

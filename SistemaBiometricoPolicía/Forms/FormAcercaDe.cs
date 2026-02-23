@@ -69,18 +69,23 @@ namespace SistemaBiometricoPolicia.Forms
                 lblEstadoLicencia.Text = "Verificando licencia...";
                 lblEstadoLicencia.ForeColor = Color.Gray;
 
-                var estadoLocal = LicenciaService.ObtenerEstadoLocal();
                 var esValida = await LicenciaService.ValidarLicenciaAsync();
+                var ultimaVerif = LicenciaService.ObtenerUltimaVerificacion();
+                var expiracion = LicenciaService.ObtenerFechaExpiracion();
 
                 if (esValida)
                 {
-                    lblEstadoLicencia.Text = "Licencia: ACTIVA (" + estadoLocal + ")";
-                    lblEstadoLicencia.ForeColor = Color.Green;
+                    lblEstadoLicencia.Text =
+                        $"Licencia: ACTIVA  |  Vence: {expiracion}\n" +
+                        $"Última verificación remota: {ultimaVerif}";
+                    lblEstadoLicencia.ForeColor = Color.DarkGreen;
                 }
                 else
                 {
-                    lblEstadoLicencia.Text = "Licencia: BLOQUEADA (" + estadoLocal + ")";
-                    lblEstadoLicencia.ForeColor = Color.Red;
+                    lblEstadoLicencia.Text =
+                        $"Licencia: BLOQUEADA  |  Vence: {expiracion}\n" +
+                        $"Última verificación remota: {ultimaVerif}";
+                    lblEstadoLicencia.ForeColor = Color.DarkRed;
                 }
             }
             catch (Exception ex)

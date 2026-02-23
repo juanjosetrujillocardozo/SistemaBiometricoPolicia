@@ -14,7 +14,7 @@ namespace SistemaBiometricoPolicia.Utils
             List<string> errores = new List<string>();
 
             // 1. Verificar Carpetas Críticas
-            string[] carpetas = { "Sonidos", "FotosEstudiantes", "FotosConsumo", "Reportes", "Logs" };
+            string[] carpetas = { "Sonidos", "Fotos", "FotosEstudiantes", "FotosConsumo", "Reportes", "Logs" };
             foreach (string carpeta in carpetas)
             {
                 string ruta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, carpeta);

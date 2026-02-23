@@ -12,7 +12,7 @@ namespace SistemaBiometricoPolicia.Utils
         private static VideoCaptureDevice videoSource;
         private static PictureBox pictureBoxDestino;
         private static Bitmap ultimoFrame;
-        private static readonly object _lockFrame = new object();  // ? NUEVO: lock para thread safety
+        private static readonly object _lockFrame = new object();
 
         public static bool HayWebcamDisponible()
         {
@@ -24,7 +24,7 @@ namespace SistemaBiometricoPolicia.Utils
         {
             try
             {
-                // ? NUEVO: Si ya est· corriendo, detener primero
+                // Si ya est√° corriendo, detener primero
                 if (videoSource != null && videoSource.IsRunning)
                     Detener();
 
@@ -32,7 +32,7 @@ namespace SistemaBiometricoPolicia.Utils
 
                 var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
                 if (videoDevices.Count == 0)
-                    throw new Exception("No se encontrÛ ninguna c·mara web conectada.");
+                    throw new Exception("No se encontr√≥ ninguna c√°mara web conectada.");
 
                 videoSource = new VideoCaptureDevice(videoDevices[0].MonikerString);
                 videoSource.NewFrame += VideoSource_NewFrame;
@@ -40,7 +40,7 @@ namespace SistemaBiometricoPolicia.Utils
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error al iniciar la c·mara: {ex.Message}");
+                throw new Exception($"Error al iniciar la c√°mara: {ex.Message}");
             }
         }
 
@@ -48,12 +48,12 @@ namespace SistemaBiometricoPolicia.Utils
         {
             try
             {
-                // ? NUEVO: Verificar que el destino no estÈ destruido antes de procesar
+                // Verificar que el destino no est√© destruido antes de procesar
                 if (pictureBoxDestino == null || pictureBoxDestino.IsDisposed) return;
 
                 Bitmap frame = (Bitmap)eventArgs.Frame.Clone();
 
-                // ? NUEVO: Guardar ultimoFrame con lock para thread safety
+                // Guardar ultimoFrame con lock para thread safety
                 lock (_lockFrame)
                 {
                     ultimoFrame?.Dispose();
@@ -62,7 +62,7 @@ namespace SistemaBiometricoPolicia.Utils
 
                 pictureBoxDestino.BeginInvoke(new Action(() =>
                 {
-                    // ? NUEVO: Doble check dentro del BeginInvoke (puede ejecutarse tarde)
+                    // Doble check dentro del BeginInvoke (puede ejecutarse tarde)
                     if (pictureBoxDestino == null || pictureBoxDestino.IsDisposed)
                     {
                         frame.Dispose();
@@ -80,7 +80,7 @@ namespace SistemaBiometricoPolicia.Utils
             {
                 if (pictureBoxDestino == null || pictureBoxDestino.IsDisposed)
                 {
-                    nuevoFrame?.Dispose();  // ? NUEVO: Evitar leak si el destino ya no existe
+                    nuevoFrame?.Dispose();
                     return;
                 }
                 var viejaImagen = pictureBoxDestino.Image;
@@ -98,7 +98,6 @@ namespace SistemaBiometricoPolicia.Utils
 
         public static Bitmap CapturarFoto()
         {
-            // ? NUEVO: Lock para leer ultimoFrame de forma segura
             lock (_lockFrame)
             {
                 return ultimoFrame != null ? (Bitmap)ultimoFrame.Clone() : null;
@@ -116,12 +115,11 @@ namespace SistemaBiometricoPolicia.Utils
                     if (videoSource.IsRunning)
                     {
                         videoSource.SignalToStop();
-                        videoSource.WaitForStop();  // ? CORREGIDO: WaitForStop en lugar de Stop()
+                        videoSource.WaitForStop();
                     }
                     videoSource = null;
                 }
 
-                // ? NUEVO: Limpiar ultimoFrame con lock
                 lock (_lockFrame)
                 {
                     ultimoFrame?.Dispose();
@@ -135,12 +133,12 @@ namespace SistemaBiometricoPolicia.Utils
                         pictureBoxDestino.Image?.Dispose();
                         pictureBoxDestino.Image = null;
                     }
-                    pictureBoxDestino = null;  // ? NUEVO: Soltar referencia siempre
+                    pictureBoxDestino = null;
                 }
             }
             catch (Exception ex)
             {
-                LogHelper.RegistrarError("Error al detener c·mara", ex);
+                LogHelper.RegistrarError("Error al detener c√°mara", ex);
             }
         }
     }

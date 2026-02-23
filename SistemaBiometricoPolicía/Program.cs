@@ -42,13 +42,9 @@ namespace SistemaBiometricoPolicia
                 if (ex != null) LogHelper.RegistrarError("EXCEPCION FATAL", ex);
             };
 
-            // Iniciar monitor de estado
-            SystemHealthMonitor.Start();
-            StatusHub.PushEvento("=== SISTEMA INICIADO ===");
-
             Application.Run(new FormPrincipal());
 
-            // Detener monitor al salir
+            // Detener monitor al salir (FormPrincipal.OnFormClosing lo hace primero, esto es por seguridad)
             SystemHealthMonitor.Stop();
         }
     }

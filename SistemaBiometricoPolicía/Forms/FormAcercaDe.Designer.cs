@@ -65,7 +65,7 @@
             this.panelInfo.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelInfo.Location = new System.Drawing.Point(0, 70);
             this.panelInfo.Name = "panelInfo";
-            this.panelInfo.Size = new System.Drawing.Size(500, 200);
+            this.panelInfo.Size = new System.Drawing.Size(500, 215);
             this.panelInfo.TabIndex = 1;
             // 
             // lblContacto
@@ -73,7 +73,7 @@
             this.lblContacto.AutoSize = true;
             this.lblContacto.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.lblContacto.ForeColor = System.Drawing.Color.DimGray;
-            this.lblContacto.Location = new System.Drawing.Point(30, 165);
+            this.lblContacto.Location = new System.Drawing.Point(30, 175);
             this.lblContacto.Name = "lblContacto";
             this.lblContacto.Size = new System.Drawing.Size(220, 15);
             this.lblContacto.TabIndex = 4;
@@ -83,7 +83,7 @@
             // 
             this.lblEmpresa.AutoSize = true;
             this.lblEmpresa.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblEmpresa.Location = new System.Drawing.Point(30, 140);
+            this.lblEmpresa.Location = new System.Drawing.Point(30, 148);
             this.lblEmpresa.Name = "lblEmpresa";
             this.lblEmpresa.Size = new System.Drawing.Size(280, 19);
             this.lblEmpresa.TabIndex = 3;
@@ -91,11 +91,11 @@
             // 
             // lblEstadoLicencia
             // 
-            this.lblEstadoLicencia.AutoSize = true;
-            this.lblEstadoLicencia.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
-            this.lblEstadoLicencia.Location = new System.Drawing.Point(30, 95);
+            this.lblEstadoLicencia.AutoSize = false;
+            this.lblEstadoLicencia.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.lblEstadoLicencia.Location = new System.Drawing.Point(30, 92);
             this.lblEstadoLicencia.Name = "lblEstadoLicencia";
-            this.lblEstadoLicencia.Size = new System.Drawing.Size(150, 20);
+            this.lblEstadoLicencia.Size = new System.Drawing.Size(440, 40);
             this.lblEstadoLicencia.TabIndex = 2;
             this.lblEstadoLicencia.Text = "Verificando licencia...";
             // 
@@ -127,7 +127,7 @@
             this.panelButtons.Controls.Add(this.btnVerificarLicencia);
             this.panelButtons.Controls.Add(this.btnBuscarActualizaciones);
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelButtons.Location = new System.Drawing.Point(0, 270);
+            this.panelButtons.Location = new System.Drawing.Point(0, 285);
             this.panelButtons.Name = "panelButtons";
             this.panelButtons.Size = new System.Drawing.Size(500, 130);
             this.panelButtons.TabIndex = 2;
@@ -178,7 +178,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(500, 400);
+            this.ClientSize = new System.Drawing.Size(500, 415);
             this.Controls.Add(this.panelButtons);
             this.Controls.Add(this.panelInfo);
             this.Controls.Add(this.panelHeader);

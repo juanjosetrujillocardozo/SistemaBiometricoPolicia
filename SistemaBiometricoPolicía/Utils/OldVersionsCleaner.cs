@@ -97,8 +97,13 @@ namespace SistemaBiometricoPolicia.Utils
                     return;
                 }
 
-                // Ordenar por versión de texto (simple), la última asumimos que es la más nueva
-                versiones.Sort((a, b) => string.Compare(a.DisplayVersion, b.DisplayVersion, StringComparison.OrdinalIgnoreCase));
+                // Ordenar por versión semántica (no por string, para evitar "1.0.0.9" > "1.0.0.10")
+                versiones.Sort((a, b) =>
+                {
+                    Version.TryParse(a.DisplayVersion, out var va);
+                    Version.TryParse(b.DisplayVersion, out var vb);
+                    return (va ?? new Version(0, 0)).CompareTo(vb ?? new Version(0, 0));
+                });
 
                 var masReciente = versiones[versiones.Count - 1];
                 var antiguas = versiones.GetRange(0, versiones.Count - 1);

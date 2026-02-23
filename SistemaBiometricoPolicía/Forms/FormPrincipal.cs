@@ -160,19 +160,24 @@ namespace SistemaBiometricoPolicia.Forms
         {
             try
             {
+                int totalEstudiantes;
                 using (var conn = DatabaseHelper.ObtenerConexion())
                 {
                     conn.Open();
-                    var cmdTotal = new System.Data.SQLite.SQLiteCommand("SELECT COUNT(*) FROM Estudiantes", conn);
-                    int totalEstudiantes = Convert.ToInt32(cmdTotal.ExecuteScalar());
-
-                    var cmdHoy = new System.Data.SQLite.SQLiteCommand(
-                        "SELECT COUNT(*) FROM RegistrosAlimentacion WHERE date(FechaHora) = date('now', 'localtime')", conn);
-                    int registrosHoy = Convert.ToInt32(cmdHoy.ExecuteScalar());
-
-                    lblEstadisticas.Text = $"📊 Estudiantes: {totalEstudiantes} | Registros Hoy: {registrosHoy}";
-                    StatusHub.PushEvento($"📊 Estadísticas: {totalEstudiantes} estudiantes, {registrosHoy} registros hoy.");
+                    using (var cmd = new System.Data.SQLite.SQLiteCommand("SELECT COUNT(*) FROM Estudiantes", conn))
+                        totalEstudiantes = Convert.ToInt32(cmd.ExecuteScalar());
                 }
+
+                var stats = DatabaseHelper.ObtenerEstadisticasHoy();
+
+                lblEstadisticas.Text =
+                    $"📊 {totalEstudiantes} estudiantes  |  " +
+                    $"Hoy: {stats.total} registros  " +
+                    $"(🍳 {stats.desayunos}  🍽 {stats.almuerzos}  🌙 {stats.cenas})";
+
+                StatusHub.PushEvento(
+                    $"📊 {totalEstudiantes} estudiantes | " +
+                    $"Hoy: D={stats.desayunos} A={stats.almuerzos} C={stats.cenas} Total={stats.total}");
             }
             catch (Exception ex)
             {
