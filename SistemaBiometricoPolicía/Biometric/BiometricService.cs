@@ -13,28 +13,28 @@ namespace SistemaBiometricoPolicia.Biometric
 {
     public class EstudianteIdentificadoEventArgs : EventArgs
     {
-        public int    EstudianteId     { get; set; }
-        public string Nombre           { get; set; }
-        public string Apellidos        { get; set; }
-        public string Seccion          { get; set; }
-        public string NumeroDocumento  { get; set; }
+        public int EstudianteId { get; set; }
+        public string Nombre { get; set; }
+        public string Apellidos { get; set; }
+        public string Seccion { get; set; }
+        public string NumeroDocumento { get; set; }
     }
 
-    public class BiometricService : DPFP.Capture.EventHandler
+    // 👇 Aquí añadimos IDisposable
+    public class BiometricService : DPFP.Capture.EventHandler, IDisposable
     {
-        private Capture      Capturer;
+        private Capture Capturer;
         private Verification _verificador;
 
         public event EventHandler<EstudianteIdentificadoEventArgs> EstudianteIdentificado;
-        public event EventHandler<string>                          MensajeEstado;
+        public event EventHandler<string> MensajeEstado;
 
         public BiometricService()
         {
             try
             {
                 StatusHub.PushEvento("🔄 Inicializando SDK de DigitalPersona...");
-                Capturer     = new Capture();
-                // FAR = Probability.Default (~1:100 000) — algoritmo certificado NIST
+                Capturer = new Capture();
                 _verificador = new Verification();
 
                 if (Capturer != null)
@@ -105,6 +105,7 @@ namespace SistemaBiometricoPolicia.Biometric
             }
         }
 
+        // 👇 Implementación formal de IDisposable
         public void Dispose()
         {
             if (Capturer != null)
@@ -166,8 +167,8 @@ namespace SistemaBiometricoPolicia.Biometric
             try
             {
                 var extractor = new FeatureExtraction();
-                var feedback  = CaptureFeedback.None;
-                var features  = new FeatureSet();
+                var feedback = CaptureFeedback.None;
+                var features = new FeatureSet();
                 extractor.CreateFeatureSet(sample, purpose, ref feedback, ref features);
 
                 if (feedback == CaptureFeedback.Good)
@@ -191,8 +192,8 @@ namespace SistemaBiometricoPolicia.Biometric
         {
             try
             {
-                var    conversor = new SampleConversion();
-                Bitmap bitmap    = null;
+                var conversor = new SampleConversion();
+                Bitmap bitmap = null;
                 conversor.ConvertToPicture(sample, ref bitmap);
                 return bitmap;
             }
@@ -204,11 +205,6 @@ namespace SistemaBiometricoPolicia.Biometric
             }
         }
 
-        /// <summary>
-        /// Serializa el FeatureSet de enrolamiento para persistir en BD.
-        /// El template definitivo (Enrollment.Template) se construye en FormEnrolamiento
-        /// acumulando al menos 4 muestras — Fase 2 del roadmap de refactor.
-        /// </summary>
         public byte[] CapturarYSerializarHuella(Sample sample)
         {
             try
@@ -249,14 +245,14 @@ namespace SistemaBiometricoPolicia.Biometric
                         FROM   Huellas h
                         INNER JOIN Estudiantes e ON e.Id = h.EstudianteId";
 
-                    using (var cmd    = new SQLiteCommand(sql, conn))
+                    using (var cmd = new SQLiteCommand(sql, conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         int huellasComparadas = 0;
                         while (reader.Read())
                         {
                             huellasComparadas++;
-                            byte[]   stored   = (byte[])reader["TemplateHuella"];
+                            byte[] stored = (byte[])reader["TemplateHuella"];
                             Template template = DeserializarTemplate(stored, reader["Id"].ToString());
                             if (template == null) continue;
 
@@ -271,10 +267,10 @@ namespace SistemaBiometricoPolicia.Biometric
 
                                 EstudianteIdentificado?.Invoke(this, new EstudianteIdentificadoEventArgs
                                 {
-                                    EstudianteId    = Convert.ToInt32(reader["EstudianteId"]),
-                                    Nombre          = reader["Nombres"].ToString(),
-                                    Apellidos       = reader["Apellidos"].ToString(),
-                                    Seccion         = reader["Seccion"].ToString(),
+                                    EstudianteId = Convert.ToInt32(reader["EstudianteId"]),
+                                    Nombre = reader["Nombres"].ToString(),
+                                    Apellidos = reader["Apellidos"].ToString(),
+                                    Seccion = reader["Seccion"].ToString(),
                                     NumeroDocumento = reader["NumeroDocumento"].ToString()
                                 });
                                 return;
@@ -296,14 +292,8 @@ namespace SistemaBiometricoPolicia.Biometric
             }
         }
 
-        /// <summary>
-        /// Deserializa bytes almacenados como DPFP.Template (formato nuevo) o como
-        /// DPFP.FeatureSet (formato legacy previo a Fase 0).
-        /// Registros legacy requieren re-enrolamiento para aprovechar el SDK al 100%.
-        /// </summary>
         private Template DeserializarTemplate(byte[] bytes, string huellaId)
         {
-            // Intento 1 — Formato nuevo: Template completo del SDK
             try
             {
                 var template = new Template();
@@ -311,9 +301,8 @@ namespace SistemaBiometricoPolicia.Biometric
                     template.DeSerialize(ms);
                 return template;
             }
-            catch { /* no era un Template serializado */ }
+            catch { }
 
-            // Intento 2 — Formato legacy: FeatureSet de DataPurpose.Enrollment
             try
             {
                 var featureSet = new FeatureSet();

@@ -57,7 +57,8 @@ namespace SistemaBiometricoPolicia.Utils
                             return false;
                         }
 
-                        await VerificarRemotamente(token);
+                        // 🔧 Evitar deadlock en UI
+                        await VerificarRemotamente(token).ConfigureAwait(false);
 
                         string estadoActualizado;
                         using (var cmdEstado = new SQLiteCommand("SELECT Estado FROM Licencia LIMIT 1", conn))
@@ -110,7 +111,11 @@ namespace SistemaBiometricoPolicia.Utils
                 using (var client = new HttpClient())
                 {
                     client.Timeout = TimeSpan.FromSeconds(5);
-                    var response = await client.GetStringAsync($"{URL_VALIDACION}?token={token}");
+
+                    // 🔧 Evitar capturar el contexto de sincronización (UI)
+                    var response = await client
+                        .GetStringAsync($"{URL_VALIDACION}?token={token}")
+                        .ConfigureAwait(false);
 
                     if (response != null && response.Trim().ToUpper().Contains("BLOQUEAR"))
                     {
@@ -126,6 +131,7 @@ namespace SistemaBiometricoPolicia.Utils
             }
             catch (Exception ex)
             {
+                // Si falla la conexión, NO bloquear (puede ser problema de red temporal)
                 LogHelper.RegistrarError("Error al verificar licencia remotamente (se mantiene estado local)", ex);
             }
         }
@@ -152,6 +158,7 @@ namespace SistemaBiometricoPolicia.Utils
 
         public static bool ValidarLicencia()
         {
+            // Sigue siendo sync-friendly para el código existente
             return ValidarLicenciaAsync().GetAwaiter().GetResult();
         }
     }

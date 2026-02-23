@@ -31,8 +31,15 @@ namespace SistemaBiometricoPolicia.Data
             using (var conn = ObtenerConexion())
             {
                 conn.Open();
+
+                // WAL para lecturas/escrituras concurrentes
                 using (var cmd = new SQLiteCommand("PRAGMA journal_mode=WAL;", conn))
                     cmd.ExecuteNonQuery();
+
+                // Timeout de bloqueo (5s) para evitar SQLITE_BUSY inmediato
+                using (var cmd = new SQLiteCommand("PRAGMA busy_timeout=5000;", conn))
+                    cmd.ExecuteNonQuery();
+
                 CrearTablas(conn);
             }
         }
