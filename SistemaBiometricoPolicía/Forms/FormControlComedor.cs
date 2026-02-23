@@ -109,27 +109,42 @@ namespace SistemaBiometricoPolicia.Forms
 
         private void ProcesarIdentificacion(int estudianteId)
         {
-            if (servicioActual == "FUERA DE HORARIO")
+            try
             {
-                MostrarMensaje("FUERA DE HORARIO", Color.Red);
-                SoundHelper.PlayError();
-                return;
-            }
+                if (servicioActual == "FUERA DE HORARIO")
+                {
+                    MostrarMensaje("FUERA DE HORARIO", Color.Red);
+                    SoundHelper.PlayError();
+                    return;
+                }
 
-            if (ValidarSiYaConsumio(estudianteId, servicioActual))
-            {
-                CargarDatosEstudiante(estudianteId);
-                MostrarMensaje("YA CONSUMIÓ " + servicioActual, Color.Orange);
-                SoundHelper.PlayAlert();
+                if (ValidarSiYaConsumio(estudianteId, servicioActual))
+                {
+                    CargarDatosEstudiante(estudianteId);
+                    MostrarMensaje("YA CONSUMIÓ " + servicioActual, Color.Orange);
+                    SoundHelper.PlayAlert();
+                }
+                else
+                {
+                    string fotoEvidencia = GuardarFotoEvidencia(estudianteId);
+                    RegistrarConsumo(estudianteId, servicioActual, fotoEvidencia);
+                    CargarDatosEstudiante(estudianteId);
+                    MostrarMensaje("✓ REGISTRADO - ¡SIGA!", Color.Green);
+                    SoundHelper.PlaySuccess();
+                    ActualizarContadorRegistros();
+                }
             }
-            else
+            catch (SQLiteException ex) when (ex.Message.Contains("database is locked"))
             {
-                string fotoEvidencia = GuardarFotoEvidencia(estudianteId);
-                RegistrarConsumo(estudianteId, servicioActual, fotoEvidencia);
-                CargarDatosEstudiante(estudianteId);
-                MostrarMensaje("✓ REGISTRADO - ¡SIGA!", Color.Green);
-                SoundHelper.PlaySuccess();
-                ActualizarContadorRegistros();
+                LogHelper.RegistrarError("DB bloqueada durante identificación", ex);
+                MostrarMensaje("ERROR BD - REINTENTE", Color.Red);
+                SoundHelper.PlayError();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.RegistrarError("Error en ProcesarIdentificacion", ex);
+                MostrarMensaje("ERROR - LLAME AL TÉCNICO", Color.Red);
+                SoundHelper.PlayError();
             }
         }
 
@@ -196,9 +211,12 @@ namespace SistemaBiometricoPolicia.Forms
                                 WebcamHelper.Detener();
                                 try
                                 {
-                                    using (var fs = new FileStream(rutaFoto, FileMode.Open, FileAccess.Read))
+                                    if (File.Exists(rutaFoto))
                                     {
-                                        pictureBoxFoto.Image = Image.FromStream(fs);
+                                        using (var img = Image.FromFile(rutaFoto))
+                                        {
+                                            pictureBoxFoto.Image = new Bitmap(img);
+                                        }
                                     }
                                 }
                                 catch { }
@@ -296,7 +314,7 @@ namespace SistemaBiometricoPolicia.Forms
                 {
                     biometricService.EstudianteIdentificado -= BiometricService_EstudianteIdentificado;
                     biometricService.MensajeEstado -= BiometricService_MensajeEstado;
-                    biometricService.DetenerCaptura();
+                    biometricService?.Dispose();
                     biometricService = null;
                 }
 

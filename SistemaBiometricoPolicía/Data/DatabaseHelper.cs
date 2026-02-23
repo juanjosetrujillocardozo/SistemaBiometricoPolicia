@@ -16,7 +16,7 @@ namespace SistemaBiometricoPolicia.Data
         {
             dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "biometrico.db");
             // Fase 0: Sin contraseña para asegurar estabilidad con System.Data.SQLite estándar
-            ConnectionString = $"Data Source={dbPath};Version=3;";
+            ConnectionString = $"Data Source={dbPath};Version=3;Default Timeout=5;";
             InicializarBaseDeDatos();
         }
 
@@ -31,6 +31,8 @@ namespace SistemaBiometricoPolicia.Data
             using (var conn = ObtenerConexion())
             {
                 conn.Open();
+                using (var cmd = new SQLiteCommand("PRAGMA journal_mode=WAL;", conn))
+                    cmd.ExecuteNonQuery();
                 CrearTablas(conn);
             }
         }

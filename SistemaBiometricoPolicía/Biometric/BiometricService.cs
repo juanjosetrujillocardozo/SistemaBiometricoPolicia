@@ -105,6 +105,17 @@ namespace SistemaBiometricoPolicia.Biometric
             }
         }
 
+        public void Dispose()
+        {
+            if (Capturer != null)
+            {
+                try { Capturer.StopCapture(); } catch { }
+                Capturer.EventHandler = null;
+                Capturer.Dispose();
+                Capturer = null;
+            }
+        }
+
         public void OnComplete(object capture, string readerSerialNumber, Sample sample)
         {
             StatusHub.PushEvento("👆 Huella capturada físicamente del lector.");

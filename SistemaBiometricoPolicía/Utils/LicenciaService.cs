@@ -9,7 +9,7 @@ namespace SistemaBiometricoPolicia.Utils
     public static class LicenciaService
     {
         // 🔧 MODO DESARROLLADOR - Cambiar a false antes de entregar al cliente
-        private const bool MODO_DESARROLLADOR = true;
+        private const bool MODO_DESARROLLADOR = false;
 
         private const string URL_VALIDACION = "https://licencias.trujotechnologies.com/check-license.php";
 
