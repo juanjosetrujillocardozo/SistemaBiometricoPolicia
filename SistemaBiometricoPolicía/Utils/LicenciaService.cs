@@ -8,17 +8,29 @@ namespace SistemaBiometricoPolicia.Utils
 {
     public static class LicenciaService
     {
+        // 🔧 MODO DESARROLLADOR - Cambiar a false antes de entregar al cliente
+        private const bool MODO_DESARROLLADOR = true;
+
         private const string URL_VALIDACION = "https://licencias.trujotechnologies.com/check-license.php";
 
         public static bool LicenciaValida { get; private set; } = false;
         public static string MensajeEstado { get; private set; } = "Verificando...";
 
-        /// <summary>
-        /// Valida la licencia (local + remota si hay internet).
-        /// Retorna el estado local actualizado.
-        /// </summary>
         public static async Task<bool> ValidarLicenciaAsync()
         {
+#if DEBUG
+            // En modo DEBUG siempre válido (sin warnings en Release)
+            LicenciaValida = true;
+            MensajeEstado = "Licencia Activa (Modo desarrollador)";
+            return true;
+#else
+            if (MODO_DESARROLLADOR)
+            {
+                LicenciaValida = true;
+                MensajeEstado = "Licencia Activa (Modo desarrollador)";
+                return true;
+            }
+
             try
             {
                 using (var conn = DatabaseHelper.ObtenerConexion())
@@ -38,7 +50,6 @@ namespace SistemaBiometricoPolicia.Utils
                         string estado = reader["Estado"].ToString();
                         string token = reader["TokenActivacion"].ToString();
 
-                        // 1. Verificación de Fecha Local (Funciona sin internet)
                         if (DateTime.Now > expiracion || estado == "BLOQUEADO")
                         {
                             MensajeEstado = "LICENCIA EXPIRADA O BLOQUEADA. Contacte a Soporte: +57 317 294 6935";
@@ -46,10 +57,8 @@ namespace SistemaBiometricoPolicia.Utils
                             return false;
                         }
 
-                        // 2. Verificación Remota (Si hay internet, intenta validar con tu servidor)
                         await VerificarRemotamente(token);
 
-                        // 3. Volver a leer estado local (por si se actualizó remotamente)
                         string estadoActualizado;
                         using (var cmdEstado = new SQLiteCommand("SELECT Estado FROM Licencia LIMIT 1", conn))
                             estadoActualizado = cmdEstado.ExecuteScalar()?.ToString() ?? "OK";
@@ -74,11 +83,9 @@ namespace SistemaBiometricoPolicia.Utils
                 LicenciaValida = false;
                 return false;
             }
+#endif
         }
 
-        /// <summary>
-        /// Obtiene el estado de la licencia guardado localmente (para FormAcercaDe).
-        /// </summary>
         public static string ObtenerEstadoLocal()
         {
             try
@@ -96,9 +103,6 @@ namespace SistemaBiometricoPolicia.Utils
             }
         }
 
-        /// <summary>
-        /// Verifica la licencia contra el servidor remoto.
-        /// </summary>
         private static async Task VerificarRemotamente(string token)
         {
             try
@@ -122,14 +126,10 @@ namespace SistemaBiometricoPolicia.Utils
             }
             catch (Exception ex)
             {
-                // Si falla la conexión, NO bloquear (puede ser problema de red temporal)
                 LogHelper.RegistrarError("Error al verificar licencia remotamente (se mantiene estado local)", ex);
             }
         }
 
-        /// <summary>
-        /// Actualiza el estado local de la licencia en la base de datos.
-        /// </summary>
         private static void ActualizarEstadoLocal(string nuevoEstado)
         {
             try
@@ -150,9 +150,6 @@ namespace SistemaBiometricoPolicia.Utils
             }
         }
 
-        /// <summary>
-        /// Método de compatibilidad con código anterior (sin async).
-        /// </summary>
         public static bool ValidarLicencia()
         {
             return ValidarLicenciaAsync().GetAwaiter().GetResult();

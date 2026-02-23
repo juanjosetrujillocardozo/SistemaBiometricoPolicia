@@ -86,19 +86,20 @@
     </Reference>
     <Reference Include="DPFPDevNET, Version=1.6.1.0, Culture=neutral, PublicKeyToken=696774c42ee28c57, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\x86\Debug\DPFPDevNET.dll</HintPath>
+      <HintPath>Libs\DPFPDevNET.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="DPFPEngNET, Version=1.6.1.0, Culture=neutral, PublicKeyToken=7fe76e7adf19964b, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\x86\Debug\DPFPEngNET.dll</HintPath>
+      <HintPath>Libs\DPFPEngNET.dll</HintPath>
     </Reference>
     <Reference Include="DPFPShrNET, Version=1.6.1.0, Culture=neutral, PublicKeyToken=d902fe275a8d6cf2, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\x86\Debug\DPFPShrNET.dll</HintPath>
+      <HintPath>Libs\DPFPShrNET.dll</HintPath>
     </Reference>
     <Reference Include="DPFPVerNET, Version=1.6.1.0, Culture=neutral, PublicKeyToken=4de0a9c4dcc83984, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Program Files\DigitalPersona\One Touch SDK\.NET\Bin\DPFPVerNET.dll</HintPath>
+      <HintPath>Libs\DPFPVerNET.dll</HintPath>
     </Reference>
     <Reference Include="EPPlus, Version=5.2.1.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
       <HintPath>..\packages\EPPlus.5.2.1\lib\net45\EPPlus.dll</HintPath>
@@ -137,12 +138,6 @@
       <HintPath>..\packages\NAudio.WinMM.2.2.1\lib\netstandard2.0\NAudio.WinMM.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
-    <Reference Include="SQLitePCLRaw.core, Version=2.1.11.2622, Culture=neutral, PublicKeyToken=1488e028ca7ab535, processorArchitecture=MSIL">
-      <HintPath>..\packages\SQLitePCLRaw.core.2.1.11\lib\netstandard2.0\SQLitePCLRaw.core.dll</HintPath>
-    </Reference>
-    <Reference Include="SQLitePCLRaw.provider.dynamic_cdecl, Version=2.1.11.2622, Culture=neutral, PublicKeyToken=b68184102cba0b3b, processorArchitecture=MSIL">
-      <HintPath>..\packages\SQLitePCLRaw.provider.dynamic_cdecl.2.1.11\lib\netstandard2.0\SQLitePCLRaw.provider.dynamic_cdecl.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
@@ -269,15 +264,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="bin\Debug\SistemaBiometricoPolicía.exe.config" />
-    <None Include="bin\x86\Debug\SistemaBiometricoPolicía.exe.config" />
-    <None Include="obj\Debug\build.force" />
-    <None Include="obj\Debug\DesignTimeResolveAssemblyReferences.cache" />
-    <None Include="obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
-    <None Include="obj\Debug\SistemaB.E62C57A2.Up2Date" />
-    <None Include="obj\Debug\SistemaBiometricoPolicía.csproj.AssemblyReference.cache" />
-    <None Include="obj\Debug\SistemaBiometricoPolicía.csproj.CoreCompileInputs.cache" />
-    <None Include="obj\Debug\SistemaBiometricoPolicía.csproj.GenerateResource.cache" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -294,114 +280,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="2 TRUJO TECHNOLOGIES BLANCO-fotor-2024080714329.ico" />
-    <Content Include="bin\Debug\AForge.dll" />
-    <Content Include="bin\Debug\AForge.Video.DirectShow.dll" />
-    <Content Include="bin\Debug\AForge.Video.DirectShow.xml" />
-    <Content Include="bin\Debug\AForge.Video.dll" />
-    <Content Include="bin\Debug\AForge.Video.xml" />
-    <Content Include="bin\Debug\AForge.xml" />
-    <Content Include="bin\Debug\EPPlus.dll" />
-    <Content Include="bin\Debug\EPPlus.xml" />
-    <Content Include="bin\Debug\Microsoft.Win32.Registry.dll" />
-    <Content Include="bin\Debug\Microsoft.Win32.Registry.xml" />
-    <Content Include="bin\Debug\NAudio.Asio.dll" />
-    <Content Include="bin\Debug\NAudio.Asio.xml" />
-    <Content Include="bin\Debug\NAudio.Core.dll" />
-    <Content Include="bin\Debug\NAudio.Core.xml" />
-    <Content Include="bin\Debug\NAudio.dll" />
-    <Content Include="bin\Debug\NAudio.Midi.dll" />
-    <Content Include="bin\Debug\NAudio.Midi.xml" />
-    <Content Include="bin\Debug\NAudio.Wasapi.dll" />
-    <Content Include="bin\Debug\NAudio.Wasapi.xml" />
-    <Content Include="bin\Debug\NAudio.WinForms.dll" />
-    <Content Include="bin\Debug\NAudio.WinForms.xml" />
-    <Content Include="bin\Debug\NAudio.WinMM.dll" />
-    <Content Include="bin\Debug\NAudio.WinMM.xml" />
-    <Content Include="bin\Debug\NAudio.xml" />
-    <Content Include="bin\Debug\SistemaBiometricoPolicía.exe" />
-    <Content Include="bin\Debug\SistemaBiometricoPolicía.pdb" />
-    <Content Include="bin\Debug\Sonidos\alert.wav">
+    <Content Include="Sonidos\alert.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="bin\Debug\Sonidos\error.wav">
+    <Content Include="Sonidos\error.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="bin\Debug\Sonidos\success.wav">
+    <Content Include="Sonidos\success.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="bin\Debug\System.Data.SQLite.dll" />
-    <Content Include="bin\Debug\System.Security.AccessControl.dll" />
-    <Content Include="bin\Debug\System.Security.AccessControl.xml" />
-    <Content Include="bin\Debug\System.Security.Principal.Windows.dll" />
-    <Content Include="bin\Debug\System.Security.Principal.Windows.xml" />
-    <Content Include="bin\Debug\x64\SQLite.Interop.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="bin\Debug\x86\SQLite.Interop.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="bin\x86\Debug\AForge.dll" />
-    <Content Include="bin\x86\Debug\AForge.Video.DirectShow.dll" />
-    <Content Include="bin\x86\Debug\AForge.Video.DirectShow.xml" />
-    <Content Include="bin\x86\Debug\AForge.Video.dll" />
-    <Content Include="bin\x86\Debug\AForge.Video.xml" />
-    <Content Include="bin\x86\Debug\AForge.xml" />
-    <Content Include="bin\x86\Debug\DPFPDevNET.dll" />
-    <Content Include="bin\x86\Debug\DPFPEngNET.dll" />
-    <Content Include="bin\x86\Debug\DPFPShrNET.dll" />
-    <Content Include="bin\x86\Debug\EPPlus.dll" />
-    <Content Include="bin\x86\Debug\EPPlus.Interfaces.dll" />
-    <Content Include="bin\x86\Debug\EPPlus.xml" />
-    <Content Include="bin\x86\Debug\Microsoft.Bcl.Cryptography.dll" />
-    <Content Include="bin\x86\Debug\Microsoft.Bcl.Cryptography.xml" />
-    <Content Include="bin\x86\Debug\Microsoft.IO.RecyclableMemoryStream.dll" />
-    <Content Include="bin\x86\Debug\Microsoft.IO.RecyclableMemoryStream.xml" />
-    <Content Include="bin\x86\Debug\Microsoft.Win32.Registry.dll" />
-    <Content Include="bin\x86\Debug\Microsoft.Win32.Registry.xml" />
-    <Content Include="bin\x86\Debug\NAudio.Asio.dll" />
-    <Content Include="bin\x86\Debug\NAudio.Asio.xml" />
-    <Content Include="bin\x86\Debug\NAudio.Core.dll" />
-    <Content Include="bin\x86\Debug\NAudio.Core.xml" />
-    <Content Include="bin\x86\Debug\NAudio.dll" />
-    <Content Include="bin\x86\Debug\NAudio.Midi.dll" />
-    <Content Include="bin\x86\Debug\NAudio.Midi.xml" />
-    <Content Include="bin\x86\Debug\NAudio.Wasapi.dll" />
-    <Content Include="bin\x86\Debug\NAudio.Wasapi.xml" />
-    <Content Include="bin\x86\Debug\NAudio.WinForms.dll" />
-    <Content Include="bin\x86\Debug\NAudio.WinForms.xml" />
-    <Content Include="bin\x86\Debug\NAudio.WinMM.dll" />
-    <Content Include="bin\x86\Debug\NAudio.WinMM.xml" />
-    <Content Include="bin\x86\Debug\NAudio.xml" />
-    <Content Include="bin\x86\Debug\SistemaBiometricoPolicía.exe" />
-    <Content Include="bin\x86\Debug\SistemaBiometricoPolicía.pdb" />
-    <Content Include="bin\x86\Debug\System.Buffers.dll" />
-    <Content Include="bin\x86\Debug\System.Buffers.xml" />
-    <Content Include="bin\x86\Debug\System.ComponentModel.Annotations.dll" />
-    <Content Include="bin\x86\Debug\System.Data.SQLite.dll" />
-    <Content Include="bin\x86\Debug\System.Data.SQLite.xml" />
-    <Content Include="bin\x86\Debug\System.Formats.Asn1.dll" />
-    <Content Include="bin\x86\Debug\System.Formats.Asn1.xml" />
-    <Content Include="bin\x86\Debug\System.Memory.dll" />
-    <Content Include="bin\x86\Debug\System.Memory.xml" />
-    <Content Include="bin\x86\Debug\System.Numerics.Vectors.dll" />
-    <Content Include="bin\x86\Debug\System.Numerics.Vectors.xml" />
-    <Content Include="bin\x86\Debug\System.Runtime.CompilerServices.Unsafe.dll" />
-    <Content Include="bin\x86\Debug\System.Runtime.CompilerServices.Unsafe.xml" />
-    <Content Include="bin\x86\Debug\System.Security.AccessControl.dll" />
-    <Content Include="bin\x86\Debug\System.Security.AccessControl.xml" />
-    <Content Include="bin\x86\Debug\System.Security.Cryptography.Xml.dll" />
-    <Content Include="bin\x86\Debug\System.Security.Cryptography.Xml.xml" />
-    <Content Include="bin\x86\Debug\System.Security.Principal.Windows.dll" />
-    <Content Include="bin\x86\Debug\System.Security.Principal.Windows.xml" />
-    <Content Include="bin\x86\Debug\x64\SQLite.Interop.dll" />
-    <Content Include="bin\x86\Debug\x86\SQLite.Interop.dll" />
-    <Content Include="obj\Debug\SistemaBiometricoPolicía.csproj.FileListAbsolute.txt" />
-    <Content Include="obj\Debug\SistemaBiometricoPolicía.exe" />
-    <Content Include="obj\Debug\SistemaBiometricoPolicía.pdb" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="bin\Release\" />
-    <Folder Include="obj\Debug\TempPE\" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8">

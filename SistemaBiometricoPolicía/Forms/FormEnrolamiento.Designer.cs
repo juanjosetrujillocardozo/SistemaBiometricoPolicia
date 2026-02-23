@@ -2,7 +2,9 @@
 {
     partial class FormEnrolamiento
     {
+#pragma warning disable CS0414
         private System.ComponentModel.IContainer components = null;
+#pragma warning restore CS0414
 
         private void InitializeComponent()
         {

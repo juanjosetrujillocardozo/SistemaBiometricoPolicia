@@ -156,7 +156,7 @@ namespace SistemaBiometricoPolicia.Forms
             {
                 conn.Open();
                 string sql = @"INSERT INTO RegistrosAlimentacion (EstudianteId, TipoServicio, FechaHora, FotoPath, Sincronizado)
-                               VALUES (@id, @servicio, datetime('now', 'localtime'), @foto, 0)";
+                       VALUES (@id, @servicio, datetime('now', 'localtime'), @foto, 0)";
                 using (var cmd = new SQLiteCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", estudianteId);
@@ -165,6 +165,12 @@ namespace SistemaBiometricoPolicia.Forms
                     cmd.ExecuteNonQuery();
                 }
             }
+
+            // ✅ NUEVO: Log de auditoría
+            LogHelper.RegistrarEvento(
+                $"CONSUMO REGISTRADO - EstudianteId: {estudianteId} | Servicio: {servicio} | Foto: {fotoPath ?? "Sin foto"}",
+                "CONSUMO"
+            );
         }
 
         private void CargarDatosEstudiante(int id)
@@ -196,6 +202,12 @@ namespace SistemaBiometricoPolicia.Forms
                                     }
                                 }
                                 catch { }
+                            }
+                            else
+                            {
+                                // Sin foto registrada: mantener webcam activa mostrando al policía en vivo
+                                if (!WebcamHelper.EstaActiva())
+                                    WebcamHelper.Iniciar(pictureBoxFoto);
                             }
                         }
                     }

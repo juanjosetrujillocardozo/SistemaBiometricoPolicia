@@ -79,6 +79,18 @@ namespace SistemaBiometricoPolicia.Utils
             catch { }
         }
 
+        public static bool EstaActiva()
+        {
+            try
+            {
+                return videoSource != null && videoSource.IsRunning;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         // ? MÉTODO ESTÁTICO: CapturarFoto
         public static Bitmap CapturarFoto()
         {
